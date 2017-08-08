@@ -1,0 +1,31 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  address_id:
+    required: false
+    type: number
+  line_1:
+    required: false
+    type: string
+  line_2: 
+    required: false
+    type: string
+  state: 
+    required: false
+    type: string
+  city: 
+    required: false
+    type: string
+  zip_code: 
+    required: false
+    type: string
+example: |
+          {
+            "address_id": 122,
+            "line_1": "308 S Fairfax Blvd",
+            "line_2":"S",
+            "state":"WV",
+            "city":"Ranson",
+            "zip_code":"25438"
+          }

@@ -1,0 +1,12 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+      client:
+        type: !include client_datatypes.raml
+        required: false
+      contract:
+        type: !include contract_datatypes.raml
+        required: false
+      offers:
+        type: !include offer_datatype.raml
+        required: false

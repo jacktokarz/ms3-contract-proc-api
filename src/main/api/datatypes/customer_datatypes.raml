@@ -1,0 +1,35 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  customer_id:
+    required: false
+    type: number
+  name:
+    required: false
+    type: string
+  hq_address_id: 
+    required: false
+    type: number
+  alt_address_id: 
+    required: false
+    type: number
+  billing_email: 
+    required: false
+    type: string
+  poc_id: 
+    required: false
+    type: number
+  customer_notes: 
+    required: false
+    type: string
+example: |
+          {
+            "customer_id": 923,
+            "name": "CFA",
+            "hq_address_id":1921,
+            "alt_address_id":1923,
+            "billing_email":"alberto@cfa.com",
+            "poc_id":123,
+            "customer_notes":"This is a note"
+          }

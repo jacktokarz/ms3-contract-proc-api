@@ -1,0 +1,186 @@
+#%RAML 1.0
+title: Contract process API
+version: "1.0"
+mediaType: application/json
+baseUri: http://localhost:8081
+types:
+  ContractMaster:
+    type: !include datatypes/contract_master_datatypes.raml
+  Error:
+    type: !include errormessages/error_messages.raml
+
+
+protocols: [ HTTP, HTTPS ]
+/contracts:
+  description: Fetch all the contracts based on the query parameters like name
+  get:
+    queryParameters:
+#Based on query parameters of client
+      state:
+        type: string
+        required: false
+        description: Fetch the client details based on state
+      city:
+        type: string
+        required: false
+        description: Fetch the client details based on city
+      zip_code:
+        type: string
+        required: false
+        description: Fetch the client details based on zip-code
+      client_name:
+        type: string
+        required: false
+        description: Fetch the client details based on client name
+      poc_id:
+        type: number
+        required: false
+        description: Fetch the customer details based on person_id 
+#Query parameters based on offer process api
+      entitlement_name:
+        type: string
+        required: false
+      product_name:
+        type: string
+        required: false
+      contract_name:
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: ContractMaster[]
+
+      400:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Bad Request", "code" : 400 }
+
+  post:
+    body:
+      application/json:
+        type: ContractMaster
+        example: !include examples/contract_master_example.json
+    responses:
+      201:
+        headers:
+          Location:
+            description: URI pointing to the location of the newly created contact
+            example: http://localhost:8081/contract_process_api/abc123
+      409:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Conflict detected while inserting the record", "code" : 409 }
+      400:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Bad request", "code" : 400 }
+      412:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Precondition failed", "code" : 412 }
+
+
+/contracts/{contract_id}:
+  displayName: contract_id
+  description: Fetch the contact information for the given contract_id
+  uriParameters:
+    contract_id:
+      type: integer
+      required: true
+  get:
+    headers:
+        If-None-Match:
+          type: string
+          description: |
+             The request will be processed only if the eventually existing resource's ETag doesn't match the value.
+          example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+    responses:
+      200:
+        body:
+          application/json:
+            type: ContractMaster
+            example: !include examples/contract_master_example.json
+        headers:
+            ETag:
+              displayName: ETag
+              description: The current version of the resource
+              type: string
+              example: c7493-d7-a6b64d37f6cc3
+      400:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Bad request", "code" : 400 }
+      404:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Resource not found", "code" : 404 }
+      304:
+          body:
+           application/json:
+            type: Error
+            example: { "message" : "Not Modified", "code" : 304 }
+  delete:
+    description: To delete a particular contact
+    responses:
+      204:
+        description: "Contract has been successfully deleted!"
+      400:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Bad request", "code" : 400 }
+      404:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Resource not found", "code" : 404 }
+  patch:
+    headers:
+      If-Match:
+          type: string
+          description: |
+            defines a precondition for updating the resource only if the versions match that header
+          example: c7493-d7-a6b64d37f6cc3
+    body:
+      application/json:
+        type: ContractMaster
+        example: !include examples/contract_master_example.json
+        required: false
+    responses:
+      204:
+        description: "The contact has been successfully updated!"
+        headers:
+            ETag:
+              displayName: ETag
+              description: The current version of the resource
+              type: string
+              example: c7493-d7-a6b64d37f6cc3
+      400:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Bad request", "code" : 400 }
+      404:
+        body:
+          application/json:
+            type: Error
+            example: { "message" : "Resource not found", "code" : 404 }
+      412:
+          headers:
+            ETag:
+              displayName: ETag
+              description: The new version of the resource
+              type: string
+              example: c7493-d7-a6b64d37f6cc3
+          body:
+            application/json:
+              type: Error
+              example: { "message" : "Failed to modify. The resource has been modified by other process. please use GET /contracts/123 to retrieve the latest version of the resource.", "code" : 412 }

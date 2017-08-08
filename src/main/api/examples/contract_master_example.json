@@ -1,0 +1,23 @@
+{
+"first_name": "Josh",
+"last_name":"Perry",
+"phone_number":"839-939-8392",
+"email":"josh.perry@mail.com",
+"person_notes":"some notes",
+"customer_name": "CFA",
+"hq_address_id":1921,
+"alt_address_id":1923,
+"billing_email":"alberto@cfa.com",
+"customer_notes":"This is a note",
+"line_1": "308 S Fairfax Blvd",
+"line_2":"S",
+"state":"WV",
+"city":"Ranson",
+"zip_code":"25438",
+"contract_name":"CFA_Contract",
+"description":"Description for CFA contract",
+"sow":"platinum",
+"entitlement_update_list":"123",
+"start_date":"2017-06-30",
+"end_date":"2019-06-30"
+}

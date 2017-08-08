@@ -1,0 +1,42 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+  person_id:
+    required: false
+    type: number
+  address_id:
+    required: false
+    type: number
+  position: 
+    required: false
+    type: string
+  first_name: 
+    required: false
+    type: string
+  last_name: 
+    required: false
+    type: string
+  phone_number: 
+    required: false
+    type: string
+  email: 
+    required: false
+    type: string
+  person_notes: 
+    required: false
+    type: string
+  customer_id:  
+    required: false
+    type: number
+example: |
+          {
+            "person_id":901,
+            "address_id": 122,
+            "first_name": "Josh",
+            "last_name":"Perry",
+            "phone_number":"839-939-8392",
+            "email":"josh.perry@mail.com",
+            "person_notes":"some notes",
+            "customer_id":1234
+          }
