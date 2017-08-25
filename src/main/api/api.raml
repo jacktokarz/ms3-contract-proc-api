@@ -4,6 +4,8 @@ version: "1.0"
 mediaType: application/json
 baseUri: http://localhost:8081
 types:
+  entitlement:
+    type: !include datatypes/entitlement_datatype.raml
   ContractMaster:
     type: !include datatypes/contract_master_datatypes.raml
   Error:

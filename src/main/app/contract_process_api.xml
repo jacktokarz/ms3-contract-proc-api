@@ -1,7 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.8.4"
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
-http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <flow name="delete_contract_process">
+        <choice doc:name="maybe delete product">
+            <when expression="#[message.inboundProperties.'http.query.params'.productId != null]">
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="DELETE" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:uri-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
+                        <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                    </http:request-builder>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger message="contract_process delete: productId not set, not deleting a product." level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="contract_process delete: past product" level="INFO" doc:name="Logger"/>
+        <choice doc:name="Maybe Delete Client">
+            <when expression="#[message.inboundProperties.'http.query.params'.customer_id != null]">
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${client.path}/{customer_id}" method="DELETE" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:uri-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_Id]"/>
+                        <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                    </http:request-builder>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger message="contract_process delete: No customer id defined, none deleted." level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="contract_process delete: past client" level="INFO" doc:name="Logger"/>
+        <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="DELETE" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="contract_id" value="#[flowVars.contract_id]"/>
+                <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="contract_process delete: All deleted" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="update\patch_contract_process">
+        <logger message="Contract #[flowVars.contract_id] has been updated" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="select\get_by_id_contract_process">
+        <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="GET" doc:name="Get contract from sys">
+            <http:request-builder>
+                <http:uri-param paramName="contract_id" value="#[flowVars.contract_id]"/>
+                <http:header headerName="If-None-Match" value="#[message.inboundProperties.'If-None-Match']"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Save contract" metadata:id="54b10413-5fb2-4c6c-bcc6-dba29bcc3d76">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-variable variableName="contract"><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	contract: {
+		id: payload.id[0],
+		name: payload.name[0],
+		description: payload.description[0],
+		start_date: payload.start_date[0],
+		end_date: payload.end_date[0],
+		entitlement_update_list: payload.entitlement_update_list map ((entitlementupdatelist , indexOfEntitlementupdatelist) -> entitlementupdatelist),
+		escalation_contact_id: payload.escalation_contact_id[0],
+		customer_id: payload.customer_id[0],
+		product_id: payload.product_id[0],
+		sow: payload.sow[0]
+	}
+}]]></dw:set-variable>
+        </dw:transform-message>
+        <logger message="saved: #[flowVars.contract]" level="INFO" doc:name="Logger"/>
+        <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="GET" doc:name="Get offer from process">
+            <http:request-builder>
+                <http:uri-param paramName="productId" value="#[flowVars.contract.contract.product_id]"/>
+                <http:header headerName="If-None-Match" value="#[message.inboundProperties.'If-None-Match']"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message" metadata:id="e9c979f4-a759-40e4-9666-91d0fedd5bc6">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	contract: flowVars.contract.contract,
+	offers: {
+		product_id: payload.product_id,
+		product_name: payload.product_name,
+		product_description: payload.product_description,
+		entitlements: payload.product_entitlements
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

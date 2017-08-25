@@ -15,16 +15,21 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
     </flow>
     <flow name="delete:/contracts/{contract_id}:api-config">
         <logger message="Contract process called to delete contract #[flowVars.contract_id]" level="INFO" doc:name="Logger"/>
-        <set-payload value="{&#xA;message: Bad request,&#xA;code: 400&#xA;}" doc:name="Set Payload"/>
+        <flow-ref name="delete_contract_process" doc:name="delete_contract_process"/>
+
     </flow>
     <flow name="patch:/contracts/{contract_id}:application/json:api-config">
-        <set-payload value="{&#xA;message: Bad request,&#xA;code: 400&#xA;}" doc:name="Set Payload"/>
+        <logger message="Patch called from contract process for contract id: #[flowVars.contract_id]" level="INFO" doc:name="Logger"/>
+        <flow-ref name="update\patch_contract_process" doc:name="update\patch_contract_process"/>
+
     </flow>
     <flow name="get:/contracts:api-config">
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
     <flow name="get:/contracts/{contract_id}:api-config">
-        <set-payload value="{&#xD;&#xA;&quot;first_name&quot;: &quot;Josh&quot;,&#xD;&#xA;&quot;last_name&quot;:&quot;Perry&quot;,&#xD;&#xA;&quot;phone_number&quot;:&quot;839-939-8392&quot;,&#xD;&#xA;&quot;email&quot;:&quot;josh.perry@mail.com&quot;,&#xD;&#xA;&quot;person_notes&quot;:&quot;some notes&quot;,&#xD;&#xA;&quot;customer_name&quot;: &quot;CFA&quot;,&#xD;&#xA;&quot;hq_address_id&quot;:1921,&#xD;&#xA;&quot;alt_address_id&quot;:1923,&#xD;&#xA;&quot;billing_email&quot;:&quot;alberto@cfa.com&quot;,&#xD;&#xA;&quot;customer_notes&quot;:&quot;This is a note&quot;,&#xD;&#xA;&quot;line_1&quot;: &quot;308 S Fairfax Blvd&quot;,&#xD;&#xA;&quot;line_2&quot;:&quot;S&quot;,&#xD;&#xA;&quot;state&quot;:&quot;WV&quot;,&#xD;&#xA;&quot;city&quot;:&quot;Ranson&quot;,&#xD;&#xA;&quot;zip_code&quot;:&quot;25438&quot;,&#xD;&#xA;&quot;contract_name&quot;:&quot;CFA_Contract&quot;,&#xD;&#xA;&quot;description&quot;:&quot;Description for CFA contract&quot;,&#xD;&#xA;&quot;sow&quot;:&quot;platinum&quot;,&#xD;&#xA;&quot;entitlement_update_list&quot;:&quot;123&quot;,&#xD;&#xA;&quot;start_date&quot;:&quot;2017-06-30&quot;,&#xD;&#xA;&quot;end_date&quot;:&quot;2019-06-30&quot;&#xD;&#xA;}" doc:name="Set Payload"/>
+        <logger message="Get by contract id called in contract process with id: #[flowVars.contract_id]" level="INFO" doc:name="Logger"/>
+        <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
+
     </flow>
     <flow name="post:/contracts:application/json:api-config">
         <set-payload value="{&#xA;message: Conflict detected while inserting the record,&#xA;code: 409&#xA;}" doc:name="Set Payload"/>
