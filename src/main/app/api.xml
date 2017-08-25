@@ -14,6 +14,7 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
         <apikit:console config-ref="api-config" doc:name="APIkit Console"/>
     </flow>
     <flow name="delete:/contracts/{contract_id}:api-config">
+        <logger message="Contract process called to delete contract #[flowVars.contract_id]" level="INFO" doc:name="Logger"/>
         <set-payload value="{&#xA;message: Bad request,&#xA;code: 400&#xA;}" doc:name="Set Payload"/>
     </flow>
     <flow name="patch:/contracts/{contract_id}:application/json:api-config">
