@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
     <flow name="delete_contract_process">
         <choice doc:name="maybe delete product">
             <when expression="#[message.inboundProperties.'http.query.params'.productId != null]">
@@ -46,7 +47,62 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         <logger message="contract_process delete: All deleted" level="INFO" doc:name="Logger"/>
     </flow>
     <flow name="update\patch_contract_process">
-        <logger message="Contract #[flowVars.contract_id] has been updated" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="params" value="#[message.inboundProperties.'http.query.params']" doc:name="save params"/>
+        <choice doc:name="maybe update customer">
+            <when expression="#[message.inboundProperties.'http.query.params'.customer_id !=null]">
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${client.path}/{customer_id}" method="PATCH" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:query-params expression="#[message.inboundProperties.'http.query.params']"/>
+                        <http:uri-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
+                        <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                    </http:request-builder>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger message="There is no customer id, nothing in client should be updated." level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="Client update is completed." level="INFO" doc:name="Logger"/>
+        <choice doc:name="maybe update offer">
+            <when expression="#[message.inboundProperties.'http.query.params'.product_id != null]">
+                <expression-component doc:name="Expression"><![CDATA[
+java.util.HashMap entitlements = new java.util.HashMap();
+		for(Object obj: message.inboundProperties.'http.query.params'.entrySet()) {
+			if(obj.getKey().contains("entitlement_")) {
+				entitlements.put(obj.getKey(), obj.getValue() );
+			}
+		}
+		flowVars.entitlements= entitlements;]]></expression-component>
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="PATCH" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:query-param paramName="name" value="#[flowVars.params.product_name]"/>
+                        <http:query-param paramName="description" value="#[flowVars.params.product_description]"/>
+                        <http:query-params expression="#[flowVars.entitlements]"/>
+                        <http:uri-param paramName="productId" value="#[flowVars.params.product_id]"/>
+                        <http:header headerName="If-Match" value="#[message.inboundProperties.'product-If-Match']"/>
+                        <http:header headerName="Content-Type" value="application/json"/>
+                    </http:request-builder>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger message="No product id, no need to patch offer." level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="Offer patch done." level="INFO" doc:name="Logger"/>
+        <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="PATCH" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="name" value="#[flowVars.params.contract_name]"/>
+                <http:query-param paramName="description" value="#[flowVars.params.contract_description]"/>
+                <http:query-param paramName="sow" value="#[flowVars.params.sow]"/>
+                <http:query-param paramName="entitlement_update_list" value="#[flowVars.params.entitlement_update_list]"/>
+                <http:query-param paramName="start_date" value="#[flowVars.params.start_date]"/>
+                <http:query-param paramName="end_date" value="#[flowVars.params.end_date]"/>
+                <http:uri-param paramName="contract_id" value="#[flowVars.contract_id]"/>
+                <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                <http:header headerName="Content-Type" value="application/json"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="Contract patch done." level="INFO" doc:name="Logger"/>
     </flow>
     <flow name="select\get_by_id_contract_process">
         <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="GET" doc:name="Get contract from sys">
@@ -98,5 +154,33 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 }]]></dw:set-payload>
         </dw:transform-message>
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="select\get_all_contract_process">
+        <choice doc:name="Choice">
+            <when expression="#[message.inboundProperties.'http.query.params'.contract_name != null]">
+                <db:select config-ref="MySQL_Config" doc:name="Filtered By Name Get All">
+                    <db:parameterized-query><![CDATA[SELECT id from contract WHERE name= #[message.inboundProperties.'http.query.params'.contract_name]]]></db:parameterized-query>
+                </db:select>
+            </when>
+            <otherwise>
+                <db:select config-ref="MySQL_Config" doc:name="Database">
+                    <db:parameterized-query><![CDATA[SELECT id FROM contract]]></db:parameterized-query>
+                </db:select>
+            </otherwise>
+        </choice>
+        <set-variable variableName="contracts" value="#[new java.util.ArrayList()]" doc:name="Save empty contract holder"/>
+        <logger message="contract process get all: got all contract id's: #[payload]" level="INFO" doc:name="Logger"/>
+        <foreach doc:name="For Each">
+            <set-variable variableName="contract_id" value="#[payload.id]" doc:name="Variable"/>
+            <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
+            <expression-transformer expression="#[flowVars.contracts.add(payload)]" doc:name="Expression"/>
+        </foreach>
+        <logger message="contract process get all: Got all contracts: #[flowVars.contracts]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+flowVars.contracts]]></dw:set-payload>
+        </dw:transform-message>
     </flow>
 </mule>

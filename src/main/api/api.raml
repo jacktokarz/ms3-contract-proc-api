@@ -151,11 +151,18 @@ protocols: [ HTTP, HTTPS ]
           description: |
             defines a precondition for updating the resource only if the versions match that header
           example: c7493-d7-a6b64d37f6cc3
+      product-If-Match:
+          type: string
+          required: false
+          example: c7493-d7-a6b64d37f6cc3
+      customer-If-Match:
+          type: string
+          required: false
+          example: c7493-d7-a6b64d37f6cc3
+          
     body:
       application/json:
-        type: ContractMaster
-        example: !include examples/contract_master_example.json
-        required: false
+        type: !include datatypes/contract_master_patch.raml
     responses:
       204:
         description: "The contact has been successfully updated!"
