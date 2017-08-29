@@ -22,18 +22,25 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
         <flow-ref name="update\patch_contract_process" doc:name="update\patch_contract_process" />
     </flow>
     <flow name="get:/contracts:api-config">
-        <logger message="called Get All in contract process" level="INFO" doc:name="Logger"/>
-        <flow-ref name="select\get_all_contract_process" doc:name="select\get_all_contract_process"/>
-
+        <logger message="called Get All in contract process" level="INFO" doc:name="Logger" />
+        <flow-ref name="select\get_all_contract_process" doc:name="select\get_all_contract_process" />
     </flow>
     <flow name="get:/contracts/{contract_id}:api-config">
         <logger message="Get by contract id called in contract process with id: #[flowVars.contract_id]" level="INFO" doc:name="Logger" />
         <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process" />
     </flow>
     <flow name="post:/contracts:application/json:api-config">
-        <set-payload value="{&#xA;message: Conflict detected while inserting the record,&#xA;code: 409&#xA;}" doc:name="Set Payload" />
+        <logger message="Calling POST in contract_process" level="INFO" doc:name="Logger" />
+        <flow-ref name="insert\post_contract_process" doc:name="insert\post_contract_process" />
     </flow>
-
+    <flow name="patch:/contracts/{contract_id}:api-config">
+        <set-payload value="{
+This is bad.
+}" doc:name="Set Payload"/>
+    </flow>
+    <flow name="post:/contracts:api-config">
+        <set-payload value="{&#xA;message: Conflict detected while inserting the record,&#xA;code: 409&#xA;}" doc:name="Set Payload"/>
+    </flow>
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />

@@ -63,8 +63,7 @@ protocols: [ HTTP, HTTPS ]
   post:
     body:
       application/json:
-        type: ContractMaster
-        example: !include examples/contract_master_example.json
+        {}
     responses:
       201:
         headers:
@@ -162,7 +161,7 @@ protocols: [ HTTP, HTTPS ]
           
     body:
       application/json:
-        type: !include datatypes/contract_master_patch.raml
+        {}
     responses:
       204:
         description: "The contact has been successfully updated!"

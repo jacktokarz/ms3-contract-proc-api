@@ -48,6 +48,7 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
     </flow>
     <flow name="update\patch_contract_process">
         <set-variable variableName="params" value="#[message.inboundProperties.'http.query.params']" doc:name="save params"/>
+        <set-session-variable variableName="inbound" value="#[message.inboundProperties]" doc:name="Save inbounds"/>
         <choice doc:name="maybe update customer">
             <when expression="#[message.inboundProperties.'http.query.params'.customer_id !=null]">
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${client.path}/{customer_id}" method="PATCH" doc:name="HTTP">
@@ -75,11 +76,11 @@ java.util.HashMap entitlements = new java.util.HashMap();
 		flowVars.entitlements= entitlements;]]></expression-component>
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="PATCH" doc:name="HTTP">
                     <http:request-builder>
-                        <http:query-param paramName="name" value="#[flowVars.params.product_name]"/>
-                        <http:query-param paramName="description" value="#[flowVars.params.product_description]"/>
+                        <http:query-param paramName="name" value="#[sessionVars.inbound.'http.query.params'.product_name]"/>
+                        <http:query-param paramName="description" value="#[sessionVars.inbound.'http.query.params'.product_description]"/>
                         <http:query-params expression="#[flowVars.entitlements]"/>
-                        <http:uri-param paramName="productId" value="#[flowVars.params.product_id]"/>
-                        <http:header headerName="If-Match" value="#[message.inboundProperties.'product-If-Match']"/>
+                        <http:uri-param paramName="productId" value="#[sessionVars.inbound.'http.query.params'.product_id]"/>
+                        <http:header headerName="If-Match" value="#[sessionVars.inbound.'product-If-Match']"/>
                         <http:header headerName="Content-Type" value="application/json"/>
                     </http:request-builder>
                 </http:request>
@@ -91,14 +92,14 @@ java.util.HashMap entitlements = new java.util.HashMap();
         <logger message="Offer patch done." level="INFO" doc:name="Logger"/>
         <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="PATCH" doc:name="HTTP">
             <http:request-builder>
-                <http:query-param paramName="name" value="#[flowVars.params.contract_name]"/>
-                <http:query-param paramName="description" value="#[flowVars.params.contract_description]"/>
-                <http:query-param paramName="sow" value="#[flowVars.params.sow]"/>
-                <http:query-param paramName="entitlement_update_list" value="#[flowVars.params.entitlement_update_list]"/>
-                <http:query-param paramName="start_date" value="#[flowVars.params.start_date]"/>
-                <http:query-param paramName="end_date" value="#[flowVars.params.end_date]"/>
+                <http:query-param paramName="name" value="#[sessionVars.inbound.'http.query.params'.contract_name]"/>
+                <http:query-param paramName="description" value="#[sessionVars.inbound.'http.query.params'.contract_description]"/>
+                <http:query-param paramName="sow" value="#[sessionVars.inbound.'http.query.params'.sow]"/>
+                <http:query-param paramName="entitlement_update_list" value="#[sessionVars.inbound.'http.query.params'.entitlement_update_list]"/>
+                <http:query-param paramName="start_date" value="#[sessionVars.inbound.'http.query.params'.start_date]"/>
+                <http:query-param paramName="end_date" value="#[sessionVars.inbound.'http.query.params'.end_date]"/>
                 <http:uri-param paramName="contract_id" value="#[flowVars.contract_id]"/>
-                <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                <http:header headerName="If-Match" value="#[sessionVars.inbound.'If-Match']"/>
                 <http:header headerName="Content-Type" value="application/json"/>
             </http:request-builder>
         </http:request>
@@ -184,10 +185,11 @@ flowVars.contracts]]></dw:set-payload>
         </dw:transform-message>
     </flow>
     <flow name="insert\post_contract_process">
+        <set-session-variable variableName="params" value="#[message.inboundProperties.'http.query.params']" doc:name="Session Variable"/>
         <choice doc:name="Check for incoming product_id">
-            <when expression="#[message.inboundProperties.'http.query.params'.product_id == null]">
+            <when expression="#[sessionVars.params.product_id == null]">
                 <expression-component doc:name="Save entitlements"><![CDATA[java.util.HashMap entitlements = new java.util.HashMap();
-		for(Object obj: message.inboundProperties.'http.query.params'.entrySet()) {
+		for(Object obj: sessionVars.params.entrySet()) {
 			if(obj.getKey().contains("entitlement_")) {
 				entitlements.put(obj.getKey(), obj.getValue() );
 			}
@@ -195,37 +197,47 @@ flowVars.contracts]]></dw:set-payload>
 flowVars.entitlements= entitlements;]]></expression-component>
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}" method="POST" doc:name="make offer">
                     <http:request-builder>
-                        <http:query-param paramName="name" value="#[message.inboundProperties.'http.query.params'.product_name]"/>
-                        <http:query-param paramName="description" value="#[message.inboundProperties.'http.query.params'.product_description]"/>
+                        <http:query-param paramName="name" value="#[sessionVars.params.product_name]"/>
+                        <http:query-param paramName="description" value="#[sessionVars.params.product_description]"/>
                         <http:query-params expression="#[flowVars.entitlements]"/>
                         <http:header headerName="content-type" value="application/json"/>
                     </http:request-builder>
                 </http:request>
+                <set-session-variable variableName="product_id" value="#[message.inboundProperties.'http.query.params'.passed_product_id]" doc:name="Session Variable"/>
                 <logger message="contract_process_post: Offer Created" level="INFO" doc:name="Logger"/>
             </when>
             <otherwise>
+                <set-session-variable variableName="product_id" value="#[sessionVars.params.product_id]" doc:name="Session Variable"/>
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="GET" doc:name="HTTP">
                     <http:request-builder>
-                        <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                        <http:uri-param paramName="productId" value="#[sessionVars.params.product_id]"/>
+                        <http:header headerName="if-none-match" value="#[message.inboundProperties.'if-none-match']"/>
+                        <http:header headerName="content-type" value="application/json"/>
                     </http:request-builder>
                 </http:request>
                 <logger message="contract_process_post: Offer Already exists" level="INFO" doc:name="Logger"/>
             </otherwise>
         </choice>
-        <set-variable variableName="passed_product_id" value="#[(message.inboundProperties.'http.query.params'.passed_product_id == null) ? message.inboundProperties.'http.query.params'.product_id: (message.inboundProperties.'http.query.params'.passed_product_id]" doc:name="Variable"/>
         <logger message="Placeholder for Client Creation" level="INFO" doc:name="Placeholder for Client Creation"/>
-        <set-variable variableName="passed_customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]" doc:name="Variable"/>
+        <choice doc:name="Check for incoming customer_id">
+            <when expression="#[sessionVars.params.customer_id == null]">
+                <logger message="Filler for making a customer" level="INFO" doc:name="Standing in for calling post on customer_offer"/>
+            </when>
+            <otherwise>
+                <logger message="didn't have to make a customer because was passed a customer_id" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
         <choice doc:name="Check for incoming contract_id">
-            <when expression="#[message.inboundProperties.'http.query.params'.contract_id == null]">
+            <when expression="#[sessionVars.params.contract_id == null]">
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}" method="POST" doc:name="Make Contract">
                     <http:request-builder>
-                        <http:query-param paramName="description" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
-                        <http:query-param paramName="sow" value="#[message.inboundProperties.'http.query.params'.sow]"/>
-                        <http:query-param paramName="start_date" value="#[message.inboundProperties.'http.query.params'.start_date]"/>
-                        <http:query-param paramName="end_date" value="#[message.inboundProperties.'http.query.params'.end_date]"/>
-                        <http:query-param paramName="entitlement_update_list" value="#[message.inboundProperties.'http.query.params'.entitlement_update_list]"/>
-                        <http:query-param paramName="escalation_contact_id" value="#[message.inboundProperties.'http.query.params'.escalation_contact_id]"/>
-                        <http:query-param paramName="product_id" value="#[flowVars.passed_product_id]"/>
+                        <http:query-param paramName="description" value="#[sessionVars.params.contract_name]"/>
+                        <http:query-param paramName="sow" value="#[sessionVars.params.sow]"/>
+                        <http:query-param paramName="start_date" value="#[sessionVars.params.start_date]"/>
+                        <http:query-param paramName="end_date" value="#[sessionVars.params.end_date]"/>
+                        <http:query-param paramName="entitlement_update_list" value="#[sessionVars.params.entitlement_update_list]"/>
+                        <http:query-param paramName="escalation_contact_id" value="#[sessionVars.params.escalation_contact_id]"/>
+                        <http:query-param paramName="product_id" value="#[sessionVars.product_id]"/>
                         <http:query-param paramName="customer_id" value="#[flowVars.passed_customer_id]"/>
                     </http:request-builder>
                 </http:request>
@@ -234,7 +246,9 @@ flowVars.entitlements= entitlements;]]></expression-component>
             <otherwise>
                 <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="GET" doc:name="HTTP">
                     <http:request-builder>
-                        <http:uri-param paramName="contract_id" value="#[message.inboundProperties.'http.query.params'.contract_id]"/>
+                        <http:uri-param paramName="contract_id" value="#[sessionVars.params.contract_id]"/>
+                        <http:header headerName="if-none-match" value="#[message.inboundProperties.'if-none-match']"/>
+                        <http:header headerName="content-type" value="application/json"/>
                     </http:request-builder>
                 </http:request>
                 <logger message="contract_process_post: Received contract_id, no need to make new contract." level="INFO" doc:name="Logger"/>
