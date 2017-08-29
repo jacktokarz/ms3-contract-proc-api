@@ -18,7 +18,7 @@
 "zip_code":"25438",
 "contract_id": 5339,
 "contract_name":"CFA_Contract",
-"description":"Description for CFA contract",
+"contract_description":"Description for CFA contract",
 "sow":"platinum",
 "entitlement_update_list":"123",
 "start_date":"2017-06-30",

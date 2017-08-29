@@ -156,7 +156,7 @@ java.util.HashMap entitlements = new java.util.HashMap();
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
     </flow>
     <flow name="select\get_all_contract_process">
-        <choice doc:name="Choice">
+        <choice doc:name="Get All Contract Id's">
             <when expression="#[message.inboundProperties.'http.query.params'.contract_name != null]">
                 <db:select config-ref="MySQL_Config" doc:name="Filtered By Name Get All">
                     <db:parameterized-query><![CDATA[SELECT id from contract WHERE name= #[message.inboundProperties.'http.query.params'.contract_name]]]></db:parameterized-query>
@@ -168,12 +168,12 @@ java.util.HashMap entitlements = new java.util.HashMap();
                 </db:select>
             </otherwise>
         </choice>
-        <set-variable variableName="contracts" value="#[new java.util.ArrayList()]" doc:name="Save empty contract holder"/>
+        <set-variable variableName="contracts" value="#[new java.util.ArrayList()]" doc:name="Save empty contract holder" mimeType="application/json"/>
         <logger message="contract process get all: got all contract id's: #[payload]" level="INFO" doc:name="Logger"/>
         <foreach doc:name="For Each">
-            <set-variable variableName="contract_id" value="#[payload.id]" doc:name="Variable"/>
+            <set-variable variableName="contract_id" value="#[payload.id]" doc:name="Variable" mimeType="application/json"/>
             <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
-            <expression-transformer expression="#[flowVars.contracts.add(payload)]" doc:name="Expression"/>
+            <expression-transformer expression="#[flowVars.contracts.add(payload)]" doc:name="Expression" mimeType="application/json"/>
         </foreach>
         <logger message="contract process get all: Got all contracts: #[flowVars.contracts]" level="INFO" doc:name="Logger"/>
         <dw:transform-message doc:name="Transform Message">
@@ -182,5 +182,63 @@ java.util.HashMap entitlements = new java.util.HashMap();
 ---
 flowVars.contracts]]></dw:set-payload>
         </dw:transform-message>
+    </flow>
+    <flow name="insert\post_contract_process">
+        <choice doc:name="Check for incoming product_id">
+            <when expression="#[message.inboundProperties.'http.query.params'.product_id == null]">
+                <expression-component doc:name="Save entitlements"><![CDATA[java.util.HashMap entitlements = new java.util.HashMap();
+		for(Object obj: message.inboundProperties.'http.query.params'.entrySet()) {
+			if(obj.getKey().contains("entitlement_")) {
+				entitlements.put(obj.getKey(), obj.getValue() );
+			}
+		}
+flowVars.entitlements= entitlements;]]></expression-component>
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}" method="POST" doc:name="make offer">
+                    <http:request-builder>
+                        <http:query-param paramName="name" value="#[message.inboundProperties.'http.query.params'.product_name]"/>
+                        <http:query-param paramName="description" value="#[message.inboundProperties.'http.query.params'.product_description]"/>
+                        <http:query-params expression="#[flowVars.entitlements]"/>
+                        <http:header headerName="content-type" value="application/json"/>
+                    </http:request-builder>
+                </http:request>
+                <logger message="contract_process_post: Offer Created" level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${offer.path}/{productId}" method="GET" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                    </http:request-builder>
+                </http:request>
+                <logger message="contract_process_post: Offer Already exists" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <set-variable variableName="passed_product_id" value="#[(message.inboundProperties.'http.query.params'.passed_product_id == null) ? message.inboundProperties.'http.query.params'.product_id: (message.inboundProperties.'http.query.params'.passed_product_id]" doc:name="Variable"/>
+        <logger message="Placeholder for Client Creation" level="INFO" doc:name="Placeholder for Client Creation"/>
+        <set-variable variableName="passed_customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]" doc:name="Variable"/>
+        <choice doc:name="Check for incoming contract_id">
+            <when expression="#[message.inboundProperties.'http.query.params'.contract_id == null]">
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}" method="POST" doc:name="Make Contract">
+                    <http:request-builder>
+                        <http:query-param paramName="description" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
+                        <http:query-param paramName="sow" value="#[message.inboundProperties.'http.query.params'.sow]"/>
+                        <http:query-param paramName="start_date" value="#[message.inboundProperties.'http.query.params'.start_date]"/>
+                        <http:query-param paramName="end_date" value="#[message.inboundProperties.'http.query.params'.end_date]"/>
+                        <http:query-param paramName="entitlement_update_list" value="#[message.inboundProperties.'http.query.params'.entitlement_update_list]"/>
+                        <http:query-param paramName="escalation_contact_id" value="#[message.inboundProperties.'http.query.params'.escalation_contact_id]"/>
+                        <http:query-param paramName="product_id" value="#[flowVars.passed_product_id]"/>
+                        <http:query-param paramName="customer_id" value="#[flowVars.passed_customer_id]"/>
+                    </http:request-builder>
+                </http:request>
+                <logger message="contract_process_POST: made contract" level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+                <http:request config-ref="Shared_JSD_HTTP_Request_Configuration" path="${contract.path}/{contract_id}" method="GET" doc:name="HTTP">
+                    <http:request-builder>
+                        <http:uri-param paramName="contract_id" value="#[message.inboundProperties.'http.query.params'.contract_id]"/>
+                    </http:request-builder>
+                </http:request>
+                <logger message="contract_process_post: Received contract_id, no need to make new contract." level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
     </flow>
 </mule>
