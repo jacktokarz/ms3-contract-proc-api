@@ -13,6 +13,9 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
     <http:request-config name="NoBase_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" doc:name="HTTP Request Configuration"/>
     <http:request-config name="contract_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${contract.path}" doc:name="HTTP Request Configuration"/>
  
+ 
+ <expression-filter expression="#[!flowVars.system_contract_list.isEmpty()]" name="IfContractSystemListIsEmpty" doc:name="Expression"/>
+ 
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" keepRamlBaseUri="false"/>
     <http:request-config name="offer_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${offer.path}" doc:name="HTTP Request Configuration"/>
     <http:request-config name="client_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${client.path}" doc:name="HTTP Request Configuration"/>

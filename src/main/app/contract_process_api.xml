@@ -9,6 +9,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    
 		<flow name="delete_contract_process">
         <choice doc:name="maybe delete product">
             <when expression="#[message.inboundProperties.'http.query.params'.productId != null]">
@@ -171,55 +172,210 @@ payload]]></dw:set-variable>
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
     </flow>
     <flow name="select\get_all_contract_process">
-        <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="Get all contracts filtered by contract params">
-            <http:request-builder>
-                <http:query-param paramName="product_id" value="#[message.inboundProperties.&quot;http.query.params&quot;.product_id]"/>
-                <http:query-param paramName="contract_name" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
-                <http:query-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
-            </http:request-builder>
-        </http:request>
-        <dw:transform-message doc:name="Save system contract list">
+        <logger message="get all contract process: product_id= #[message.inboundProperties.'http.query.params'.product_id] and contract_name= #[message.inboundProperties.'http.query.params'.contract_name]" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="original_params" value="#[message.inboundProperties.'http.query.params']" doc:name="initial_params"/>
+        <choice doc:name="Check which contract filtering params were passed">
+            <when expression="#[message.inboundProperties.'http.query.params'.product_id!=null]">
+                <choice doc:name="product_id">
+                    <when expression="#[message.inboundProperties.'http.query.params'.product_id!=null]">
+                        <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="get all contracts by product id and contract name">
+                            <http:request-builder>
+                                <http:query-param paramName="product_id" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                                <http:query-param paramName="contract_name" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </when>
+                    <when expression="">
+                        <choice doc:name="product and customer id">
+                            <when expression="#[message.inboundProperties.'http.query.params'.contract_name!=null]">
+                                <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="Get all contracts filtered by all contract params">
+                                    <http:request-builder>
+                                        <http:query-param paramName="product_id" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                                        <http:query-param paramName="contract_name" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
+                                        <http:query-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
+                                    </http:request-builder>
+                                </http:request>
+                            </when>
+                            <otherwise>
+                                <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="all contracts filtered by product and customer">
+                                    <http:request-builder>
+                                        <http:query-param paramName="product_id" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                                        <http:query-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
+                                    </http:request-builder>
+                                </http:request>
+                            </otherwise>
+                        </choice>
+                    </when>
+                    <otherwise>
+                        <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="get contracts filtered by product_id">
+                            <http:request-builder>
+                                <http:query-param paramName="product_id" value="#[message.inboundProperties.'http.query.params'.product_id]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </otherwise>
+                </choice>
+            </when>
+            <when expression="#[message.inboundProperties.'http.query.params'.contract_name!=null]">
+                <choice doc:name="contract_name">
+                    <when expression="">
+                        <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="contract name and customer id">
+                            <http:request-builder>
+                                <http:query-param paramName="contract_name" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
+                                <http:query-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </when>
+                    <otherwise>
+                        <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="contract_name">
+                            <http:request-builder>
+                                <http:query-param paramName="contract_name" value="#[message.inboundProperties.'http.query.params'.contract_name]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </otherwise>
+                </choice>
+            </when>
+            <when expression="#[message.inboundProperties.'http.query.params'.customer_id!=null]">
+                <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="customer_id">
+                    <http:request-builder>
+                        <http:query-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
+                    </http:request-builder>
+                </http:request>
+            </when>
+            <otherwise>
+                <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="none"/>
+            </otherwise>
+        </choice>
+        <dw:transform-message doc:name="Save system contract list" metadata:id="8a21dda2-0ab4-4a75-8d99-88adc91a4ef8">
+            <dw:input-payload mimeType="application/json"/>
             <dw:set-variable variableName="system_contract_list"><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-variable>
         </dw:transform-message>
-        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="Get all offers filtered by params">
-            <http:request-builder>
-                <http:query-param paramName="product_name" value="#[message.inboundProperties.'http.query.params'.product_name]"/>
-                <http:query-param paramName="entitlement_name" value="#[message.inboundProperties.&quot;http.query.params&quot;.entitlement_name]"/>
-            </http:request-builder>
-        </http:request>
-        <dw:transform-message doc:name="Save offer list">
-            <dw:set-variable variableName="offer_list"><![CDATA[%dw 1.0
+        <filter ref="IfContractSystemListIsEmpty" doc:name="Filter out if list is empty"/>
+        <choice doc:name="Filter contract list by offer params">
+            <when expression="#[(flowVars.original_params.entitlement_name != null) || (flowVars.original_params.product_name != null)]">
+                <set-variable variableName="offer_filtered_contract_list" value="#[new java.util.ArrayList()]" mimeType="application/json" doc:name="New empty contract list"/>
+                <foreach collection="#[flowVars.system_contract_list]" doc:name="Filter each contract in list by parameters">
+                    <set-variable variableName="this_contract" value="#[payload]" doc:name="Save this contract"/>
+                    <http:request config-ref="offer_HTTP_Request_Configuration" path="/{product_id}" method="GET" doc:name="get offer by product id">
+                        <http:request-builder>
+                            <http:uri-param paramName="product_id" value="#[payload.product_id]"/>
+                            <http:header headerName="If-None-Match" value="??????"/>
+                        </http:request-builder>
+                    </http:request>
+                    <dw:transform-message doc:name="Transform Payload into Java">
+                        <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload]]></dw:set-variable>
-        </dw:transform-message>
-        <http:request config-ref="client_HTTP_Request_Configuration" path="/" method="GET" doc:name="Get all clients filtered by params">
-            <http:request-builder>
-                <http:query-param paramName="state" value="#[message.inboundProperties.&quot;http.query.params&quot;.state]"/>
-                <http:query-param paramName="city" value="#[message.inboundProperties.&quot;http.query.params&quot;.city]"/>
-                <http:query-param paramName="zip_code" value="#[message.inboundProperties.&quot;http.query.params&quot;.zip_code]"/>
-                <http:query-param paramName="client_name" value="#[message.inboundProperties.&quot;http.query.params&quot;.client_name]"/>
-                <http:query-param paramName="poc_id" value="#[message.inboundProperties.&quot;http.query.params&quot;.poc_id]"/>
-            </http:request-builder>
-        </http:request>
-        <dw:transform-message doc:name="Transform Message"/>
+payload]]></dw:set-payload>
+                    </dw:transform-message>
+                    <expression-component doc:name="add to new list if they match"><![CDATA[Object offer= payload;
+String entitlement_name= flowVars.original_params.entitlement_name;
+String product_name= flowVars.originial_params.product_name;
 
-        <set-variable variableName="contracts" value="#[new java.util.ArrayList()]" doc:name="Save empty contract holder" mimeType="application/json"/>
+if(entitlement_name!= null) {
+	if(!offer.entitlement_name.equals(entitlement_name)) {
+		return;
+	}
+}
+
+if(product_name!= null) {
+	if(!offer.product_name.equals(product_name)) {
+		return;
+	}
+}
+
+flowVars.offer_filtered_contract_list.add(flowVars.this_contract);]]></expression-component>
+                </foreach>
+                <set-variable variableName="system_contract_list" value="#[flowVars.offer_filtered_contract_list]" doc:name="Set 'system_contract_list' to 'offer_filtered_list'"/>
+            </when>
+            <otherwise>
+                <logger message="Not filtering contract list by offer params." level="INFO" doc:name="No need to filter if there are no offer related params"/>
+            </otherwise>
+        </choice>
         <logger message="contract process get all: got all contract id's: #[payload]" level="INFO" doc:name="Logger"/>
-        <foreach doc:name="For Each">
+        
+        <filter ref="IfContractSystemListIsEmpty" doc:name="Filter is list is empty"/>
+        
+        <choice doc:name="Filter contract list by client params">
+            <when expression="#[(flowVars.original_params.state != null) || (flowVars.original_params.city != null) || (flowVars.original_params.zip_code != null) || (flowVars.original_params.client_name != null) || (flowVars.original_params.poc_id != null)]">
+                <set-variable doc:name="New Empty Contract List" value="#[new java.util.ArrayList()]" variableName="client_filtered_list"/>
+                <foreach doc:name="Filter each contract in list by client parameters" collection="#[flowVars.system_contract_list]">
+                    <set-variable variableName="this_contract" value="#[payload]" doc:name="Save this contract"/>
+                    <http:request config-ref="client_HTTP_Request_Configuration" path="/{customer_id}" method="GET" doc:name="get client by customer id">
+                        <http:request-builder>
+                            <http:uri-param paramName="customer_id" value="#[payload.customer_id]"/>
+                            <http:header headerName="If-None-Match" value="????????"/>
+                        </http:request-builder>
+                    </http:request>
+                    <dw:transform-message doc:name="Transform Payload into java">
+                        <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+                    </dw:transform-message>
+                    <expression-component doc:name="Add to client filtered list if they match"><![CDATA[Object client= payload;
+String city= flowVars.original_params.city;
+String state= flowVars.original_params.state;
+String zip_code= flowVars.original_params.zip_code;
+String client_name= flowVars.original_params.client_name;
+int poc_id= flowVars.original_params.poc_id;
+
+if(city!= null) {
+	if(!client.city.equals(city)) {
+		return;
+	}
+}
+
+if(state!= null) {
+	if(!client.state.equals(state)) {
+		return;
+	}
+}
+
+if(zip_code!= null) {
+	if(!client.state.equals(zip_code)) {
+		return;
+	}
+}
+
+if(client_name!= null) {
+	if(!client.client_name.equals(client_name)) {
+		return;
+	}
+}
+
+if(poc_id!= null) {
+	if(!client.poc_id.equals(poc_id)) {
+		return;
+	}
+}
+
+flowVars.client_filtered_list.add(flowVars.this_contract);]]></expression-component>
+                </foreach>
+                <set-variable doc:name="Set system contract list to client filtered list" value="#[flowVars.client_filtered_list]" variableName="system_contract_list"/>
+            </when>
+            <otherwise>
+                <logger message="contract process get all: Got all contracts: #[flowVars.contracts]" level="INFO" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <logger message="Filtered by client query params" level="INFO" doc:name="Logger"/>
+        <filter ref="IfContractSystemListIsEmpty" doc:name="Filter if list is empty"/>
+        <set-payload value="#[flowVars.system_contract_list]" doc:name="Set Payload as system contract list"/>
+        <set-variable variableName="process_contracts" value="#[new java.util.ArrayList()]" doc:name="Variable"/>
+
+        <foreach doc:name="Make the full process contract object from the id of the system contract object">
             <set-variable variableName="contract_id" value="#[payload.id]" doc:name="get id from contract" mimeType="application/json"/>
             <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
-            <expression-transformer expression="#[flowVars.contracts.add(payload)]" doc:name="Add retrieved contract to 'contracts' list" mimeType="application/json"/>
+            <expression-transformer expression="#[flowVars.process_contracts.add(payload)]" doc:name="Add retrieved contract to process contracts' list" mimeType="application/json"/>
         </foreach>
-        <logger message="contract process get all: Got all contracts: #[flowVars.contracts]" level="INFO" doc:name="Logger"/>
+
         <dw:transform-message doc:name="Transform Message">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
 ---
-flowVars.contracts]]></dw:set-payload>
+flowVars.process_contracts]]></dw:set-payload>
         </dw:transform-message>
     </flow>
     <flow name="insert\post_contract_process">
