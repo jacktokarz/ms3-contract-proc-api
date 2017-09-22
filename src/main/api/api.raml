@@ -45,8 +45,15 @@ protocols: [ HTTP, HTTPS ]
       product_name:
         type: string
         required: false
+#Query parameters based on contract system api
+      product_id:
+        type: number
+        required: false
       contract_name:
         type: string
+        required: false
+      customer_id:
+        type: number
         required: false
     responses:
       200:
@@ -130,6 +137,12 @@ protocols: [ HTTP, HTTPS ]
             example: { "message" : "Not Modified", "code" : 304 }
   delete:
     description: To delete a particular contact
+    headers:
+      If-Match:
+        type: string
+        description: |
+            defines a precondition for updating the resource only if the versions match that header
+        example: c7493-d7-a6b64d37f6cc3
     responses:
       204:
         description: "Contract has been successfully deleted!"
@@ -158,7 +171,12 @@ protocols: [ HTTP, HTTPS ]
           type: string
           required: false
           example: c7493-d7-a6b64d37f6cc3
-          
+      If-None-Match:
+        type: string
+        description: |
+             The request will be processed only if the eventually existing resource's ETag doesn't match the value.
+        example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+        
     body:
       application/json:
         {}
