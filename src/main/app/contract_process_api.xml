@@ -187,89 +187,52 @@ payload]]></dw:set-variable>
         <choice doc:name="Filter contract list by offer params">
             <when expression="#[(flowVars.original_params.entitlement_name != null) || (flowVars.original_params.product_name != null)]">
                 <set-variable variableName="offer_filtered_contract_list" value="#[new java.util.ArrayList()]" mimeType="application/json" doc:name="New empty contract list"/>
-                <foreach collection="#[flowVars.system_contract_list]" doc:name="Filter each contract in list by parameters">
-                    <set-variable variableName="this_contract" value="#[payload]" doc:name="Save this contract"/>
-                    <choice doc:name="get offer by product id, filtered by params">
-                        <when expression="#[(flowVars.original_params.entitlement_name != null) &amp;&amp; (flowVars.original_params.product_name == null)]">
-                            <http:request config-ref="offer_HTTP_Request_Configuration" path="/{product_id}" method="GET" doc:name="entitlement_name">
-                                <http:request-builder>
-                                    <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
-                                    <http:uri-param paramName="product_id" value="#[payload.product_id]"/>
-                                    <http:header headerName="If-None-Match" value="??????"/>
-                                </http:request-builder>
-                            </http:request>
-                            
-                    <dw:transform-message doc:name="Transform Payload into Java">
-                        <dw:set-payload><![CDATA[%dw 1.0
+                <choice doc:name="get offer by product id, filtered by params">
+                    <when expression="#[(flowVars.original_params.entitlement_name != null) &amp;&amp; (flowVars.original_params.product_name == null)]">
+                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="entitlement_name">
+                            <http:request-builder>
+                                <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </when>
+                    <when expression="#[flowVars.original_params.entitlement_name == null &amp;&amp; flowVars.original_params.product_name != null]">
+                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="product name">
+                            <http:request-builder>
+                                <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </when>
+                    <otherwise>
+                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="both">
+                            <http:request-builder>
+                                <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
+                                <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
+                            </http:request-builder>
+                        </http:request>
+                    </otherwise>
+                </choice>
+                <dw:transform-message doc:name="Transform Payload into Java">
+                    <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload]]></dw:set-payload>
-                    </dw:transform-message>
-                            <expression-component doc:name="Expression"><![CDATA[Object offer= payload;
-String entitlement_name= flowVars.original_params.entitlement_name;
+payload.offers]]></dw:set-payload>
+                </dw:transform-message>
+                <expression-component doc:name="add to new list if they match"><![CDATA[import java.util.*;
 
-	if(!offer.entitlement_name.equals(entitlement_name)) {
-		return;
+ArrayList offers= payload;
+System.out.println("offers: "+offers.toString());
+
+
+ArrayList contracts= flowVars.system_contract_list;
+
+for(Object contract: contracts) {
+	for(Object offer: offers) {
+		if(contract.product_id==offer.product_id) {
+			flowVars.offer_filtered_contract_list.add(contract);
+		}
 	}
+}]]></expression-component>
 
-flowVars.offer_filtered_contract_list.add(flowVars.this_contract);]]></expression-component>
-                        </when>
-                        <when expression="#[flowVars.original_params.entitlement_name == null &amp;&amp; flowVars.original_params.product_name != null]">
-                            <http:request config-ref="offer_HTTP_Request_Configuration" path="/{product_id}" method="GET" doc:name="product name">
-                                <http:request-builder>
-                                    <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
-                                    <http:uri-param paramName="product_id" value="#[payload.product_id]"/>
-                                    <http:header headerName="If-None-Match" value="???????"/>
-                                </http:request-builder>
-                            </http:request>
-                    <dw:transform-message doc:name="Transform Payload into Java">
-                        <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-payload]]></dw:set-payload>
-                    </dw:transform-message>
-                            <expression-component doc:name="Expression"><![CDATA[Object offer= payload;
-String product_name= flowVars.original_params.product_name;
-System.out.println("product name is: "+product_name+" and offer is: "+offer.toString());
-
-	if(!offer.product_name.equals(product_name)) {
-		return;
-	}
-
-flowVars.offer_filtered_contract_list.add(flowVars.this_contract);]]></expression-component>
-                        </when>
-                        <otherwise>
-                            <http:request config-ref="offer_HTTP_Request_Configuration" path="/{product_id}" method="GET" doc:name="both">
-                                <http:request-builder>
-                                    <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
-                                    <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
-                                    <http:uri-param paramName="product_id" value="#[payload.product_id]"/>
-                                    <http:header headerName="If-None-Match" value="??????"/>
-                                </http:request-builder>
-                            </http:request>
-                    <dw:transform-message doc:name="Transform Payload into Java">
-                        <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-payload]]></dw:set-payload>
-                    </dw:transform-message>
-                            <expression-component doc:name="add to new list if they match"><![CDATA[Object offer= payload;
-String entitlement_name= flowVars.original_params.entitlement_name;
-String product_name= flowVars.original_params.product_name;
-
-	if(!offer.entitlement_name.equals(entitlement_name)) {
-		return;
-	}
-
-	if(!offer.product_name.equals(product_name)) {
-		return;
-	}
-
-flowVars.offer_filtered_contract_list.add(flowVars.this_contract);]]></expression-component>
-                        </otherwise>
-                    </choice>
-
-                </foreach>
                 <set-variable variableName="system_contract_list" value="#[flowVars.offer_filtered_contract_list]" doc:name="Set 'system_contract_list' to 'offer_filtered_list'"/>
             </when>
             <otherwise>
