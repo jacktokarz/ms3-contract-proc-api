@@ -276,59 +276,41 @@ for(Object contract: contracts) {
         <choice doc:name="Filter contract list by client params">
             <when expression="#[(flowVars.original_params.state != null) || (flowVars.original_params.city != null) || (flowVars.original_params.zip_code != null) || (flowVars.original_params.client_name != null) || (flowVars.original_params.poc_id != null)]">
                 <set-variable doc:name="New Empty Contract List" value="#[new java.util.ArrayList()]" variableName="client_filtered_list"/>
-                <foreach doc:name="Filter each contract in list by client parameters" collection="#[flowVars.system_contract_list]">
-                    <set-variable variableName="this_contract" value="#[payload]" doc:name="Save this contract"/>
-                    <http:request config-ref="client_HTTP_Request_Configuration" path="/{customer_id}" method="GET" doc:name="get client by customer id">
-                        <http:request-builder>
-                            <http:uri-param paramName="customer_id" value="#[payload.customer_id]"/>
-                            <http:header headerName="If-None-Match" value="????????"/>
-                        </http:request-builder>
-                    </http:request>
-                    <dw:transform-message doc:name="Transform Payload into java">
-                        <dw:set-payload><![CDATA[%dw 1.0
+                <http:request config-ref="client_HTTP_Request_Configuration" path="/" method="GET" doc:name="get clients with filters">
+                    <http:request-builder>
+                        <http:query-param paramName="city" value="#[flowVars.original_params.city]"/>
+                        <http:query-param paramName="state" value="#[flowVars.original_params.state]"/>
+                        <http:query-param paramName="zip_code" value="#[flowVars.original_params.zip_code]"/>
+                        <http:query-param paramName="client_name" value="#[flowVars.original_params.client_name]"/>
+                        <http:query-param paramName="poc_id" value="#[flowVars.original_params.poc_id]"/>
+                        <http:query-param paramName="first_name" value="#[flowVars.original_params.first_name]"/>
+                        <http:query-param paramName="last_name" value="#[flowVars.original_params.last_name]"/>
+                        <http:query-param paramName="position" value="#[flowVars.original_params.position]"/>
+                        <http:query-param paramName="name" value="#[flowVars.original_params.name]"/>
+                    </http:request-builder>
+                </http:request>
+                <dw:transform-message doc:name="Transform Payload into java">
+                    <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
-                    </dw:transform-message>
-                    <expression-component doc:name="Add to client filtered list if they match"><![CDATA[Object client= payload;
-String city= flowVars.original_params.city;
-String state= flowVars.original_params.state;
-String zip_code= flowVars.original_params.zip_code;
-String client_name= flowVars.original_params.client_name;
-int poc_id= flowVars.original_params.poc_id;
+                </dw:transform-message>
+                <expression-component doc:name="Add to client filtered list if they match"><![CDATA[import java.util.*;
 
-if(city!= null) {
-	if(!client.city.equals(city)) {
-		return;
+ArrayList clients= payload;
+System.out.println("clients: "+clients.toString());
+
+
+ArrayList contracts= flowVars.system_contract_list;
+
+for(Object contract: contracts) {
+	for(Object client: clients) {
+		if(contract.customer_id==client.customer_id) {
+			flowVars.client_filtered_list.add(contract);
+		}
 	}
-}
+}]]></expression-component>
 
-if(state!= null) {
-	if(!client.state.equals(state)) {
-		return;
-	}
-}
-
-if(zip_code!= null) {
-	if(!client.state.equals(zip_code)) {
-		return;
-	}
-}
-
-if(client_name!= null) {
-	if(!client.client_name.equals(client_name)) {
-		return;
-	}
-}
-
-if(poc_id!= null) {
-	if(!client.poc_id.equals(poc_id)) {
-		return;
-	}
-}
-
-flowVars.client_filtered_list.add(flowVars.this_contract);]]></expression-component>
-                </foreach>
                 <set-variable doc:name="Set system contract list to client filtered list" value="#[flowVars.client_filtered_list]" variableName="system_contract_list"/>
             </when>
             <otherwise>

@@ -37,7 +37,23 @@ protocols: [ HTTP, HTTPS ]
       poc_id:
         type: number
         required: false
-        description: Fetch the customer details based on person_id 
+        description: Fetch the customer details based on person_id
+      position:
+        type: string
+        required: false
+        description: Fetch the client details based on position
+      first_name:
+        type: string
+        required: false
+        description: Fetch the client details based on first_name
+      last_name:
+        type: string
+        required: false
+        description: Fetch the client details based on last_name
+      name:
+        type: string
+        required: false
+        description: Fetch the client details based on name
 #Query parameters based on offer process api
       entitlement_name:
         type: string
