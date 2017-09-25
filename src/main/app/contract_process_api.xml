@@ -11,33 +11,27 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
     
 		<flow name="delete_contract_process">
-        <choice doc:name="maybe delete product">
-            <when expression="#[message.inboundProperties.'http.query.params'.productId != null]">
-                <http:request config-ref="offer_HTTP_Request_Configuration" path="/{productId}" method="DELETE" doc:name="offer delete">
-                    <http:request-builder>
-                        <http:uri-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
+        <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
+        <dw:transform-message doc:name="Save contract gotten from incoming contract id as 'params'">
+            <dw:set-variable variableName="params"><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-variable>
+        </dw:transform-message>
+        <http:request config-ref="offer_HTTP_Request_Configuration" path="/{productId}" method="DELETE" doc:name="offer delete">
+            <http:request-builder>
+                <http:uri-param paramName="productId" value="#[flowVars.params.offer.product_id]"/>
+            </http:request-builder>
+        </http:request>
 
-                    </http:request-builder>
-                </http:request>
-            </when>
-            <otherwise>
-                <logger message="contract_process delete: productId not set, not deleting a product." level="INFO" doc:name="Logger"/>
-            </otherwise>
-        </choice>
         <logger message="contract_process delete: past product" level="INFO" doc:name="Logger"/>
-        <choice doc:name="Maybe Delete Client">
-            <when expression="#[message.inboundProperties.'http.query.params'.customer_id != null]">
-                <http:request config-ref="client_HTTP_Request_Configuration" path="/{customer_id}" method="DELETE" doc:name="client offer">
-                    <http:request-builder>
-                        <http:uri-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_Id]"/>
+        <http:request config-ref="client_HTTP_Request_Configuration" path="/{person_id}/{customer_id}" method="DELETE" doc:name="client delete">
+            <http:request-builder>
+                <http:query-param paramName="person_id" value="#[flowVars.params.client.person_id]"/>
+                <http:uri-param paramName="customer_id" value="#[flowVars.params.client.customer_Id]"/>
+            </http:request-builder>
+        </http:request>
 
-                    </http:request-builder>
-                </http:request>
-            </when>
-            <otherwise>
-                <logger message="contract_process delete: No customer id defined, none deleted." level="INFO" doc:name="Logger"/>
-            </otherwise>
-        </choice>
         <logger message="contract_process delete: past client" level="INFO" doc:name="Logger"/>
         <http:request config-ref="contract_HTTP_Request_Configuration" path="/{contract_id}" method="DELETE" doc:name="contract sys delete">
             <http:request-builder>
@@ -104,11 +98,34 @@ payload]]></dw:set-variable>
             </http:request-builder>
         </http:request>
         <logger message="Client update is completed." level="INFO" doc:name="Logger"/>
-        <http:request config-ref="client_HTTP_Request_Configuration" path="/{customer_id}" method="PATCH" doc:name="patch client">
+        <dw:transform-message doc:name="Set payload for client patch">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+//address
+	city: flowVars.params.city,
+	state: flowVars.params.state,
+	zip_code: flowVars.params.zip_code,
+	line_1: flowVars.params.line_1,
+	line_2: flowVars.params.line_2,
+//person
+	first_name: flowVars.params.first_name,
+	last_name: flowVars.params.last_name,
+	email: flowVars.params.email,
+	phone_number: flowVars.params.phone_number,
+	position: flowVars.params.position,
+	person_id: flowVars.params.person_id,
+	notes: flowVars.params.person_notes,
+	customer_id: flowVars.params.customer_id
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <http:request config-ref="client_HTTP_Request_Configuration" path="/{person_id}/{customer_id}" method="PATCH" doc:name="patch client">
             <http:request-builder>
-                <http:query-params expression="#[message.inboundProperties.'http.query.params']"/>
-                <http:uri-param paramName="customer_id" value="#[message.inboundProperties.'http.query.params'.customer_id]"/>
-                <http:header headerName="If-Match" value="#[message.inboundProperties.'If-Match']"/>
+                <http:uri-param paramName="customer_id" value="#[flowVars.params.customer_id]"/>
+                <http:uri-param paramName="person_id" value="#[flowVars.params.person_id]"/>
+                <http:header headerName="If-Match" value="#[flowVars.inbound.'If-Match']"/>
+
             </http:request-builder>
         </http:request>
 
@@ -132,7 +149,6 @@ payload]]></dw:set-variable>
 %output application/java
 ---
 {
-	contract: {
 		id: payload.id[0],
 		name: payload.name[0],
 		description: payload.description[0],
@@ -143,15 +159,33 @@ payload]]></dw:set-variable>
 		customer_id: payload.customer_id[0],
 		product_id: payload.product_id[0],
 		sow: payload.sow[0]
-	}
 }]]></dw:set-variable>
+
         </dw:transform-message>
         <logger message="saved: product id- #[flowVars.contract.contract.product_id] and if none match- #[flowVars.noMatch]" level="INFO" doc:name="Logger"/>
         <http:request config-ref="offer_HTTP_Request_Configuration" path="/{productId}" method="GET" doc:name="Get offer from process">
             <http:request-builder>
-                <http:uri-param paramName="productId" value="#[flowVars.contract.contract.product_id]"/>
+                <http:uri-param paramName="productId" value="#[flowVars.contract.product_id]"/>
                 <http:header headerName="If-None-Match" value="#[flowVars.noMatch]"/>
 
+
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="Save offer">
+            <dw:set-variable variableName="get_offer"><![CDATA[%dw 1.0
+%output application/java
+---
+{		
+		product_id: payload.product_id,
+		product_name: payload.product_name,
+		product_description: payload.product_description,
+		entitlements: payload.product_entitlements
+}]]></dw:set-variable>
+        </dw:transform-message>
+        <http:request config-ref="client_HTTP_Request_Configuration" path="/{customer_id}" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="customer_id" value="#[flowVars.contract.customer_id]"/>
+                <http:header headerName="If-None-Match" value="#[flowVars.noMatch]"/>
             </http:request-builder>
         </http:request>
         <dw:transform-message doc:name="Transform Message" metadata:id="e9c979f4-a759-40e4-9666-91d0fedd5bc6">
@@ -160,13 +194,9 @@ payload]]></dw:set-variable>
 %output application/json
 ---
 {
-	contract: flowVars.contract.contract,
-	offer: {
-		product_id: payload.product_id,
-		product_name: payload.product_name,
-		product_description: payload.product_description,
-		entitlements: payload.product_entitlements
-	}
+	contract: flowVars.get_contract,
+	offer: flowVars.get_offer,
+	client: payload
 }]]></dw:set-payload>
         </dw:transform-message>
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>

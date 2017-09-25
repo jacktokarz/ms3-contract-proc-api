@@ -137,12 +137,6 @@ protocols: [ HTTP, HTTPS ]
             example: { "message" : "Not Modified", "code" : 304 }
   delete:
     description: To delete a particular contact
-    headers:
-      If-Match:
-        type: string
-        description: |
-            defines a precondition for updating the resource only if the versions match that header
-        example: c7493-d7-a6b64d37f6cc3
     responses:
       204:
         description: "Contract has been successfully deleted!"
