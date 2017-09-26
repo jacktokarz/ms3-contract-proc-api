@@ -10,8 +10,8 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
     
-		<flow name="delete_contract_process">
-        <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
+		<flow name="deleteContractProcess">
+        <flow-ref name="getContractByIdProcess" doc:name="getContractByIdProcess"/>
         <dw:transform-message doc:name="Save contract gotten from incoming contract id as 'params'">
             <dw:set-variable variableName="params"><![CDATA[%dw 1.0
 %output application/java
@@ -41,7 +41,7 @@ payload]]></dw:set-variable>
         </http:request>
         <logger message="contract_process delete: All deleted" level="INFO" doc:name="Logger"/>
     </flow>
-    <flow name="update\patch_contract_process">
+    <flow name="patchContractProcess">
         <dw:transform-message doc:name="Save incoming body as flowVar 'params'" metadata:id="22dc0798-68e5-41a6-b301-9d4da02844f5">
             <dw:input-payload mimeType="application/json"/>
             <dw:set-payload><![CDATA[%dw 1.0
@@ -133,7 +133,7 @@ payload]]></dw:set-variable>
 
         <logger message="Contract patch done." level="INFO" doc:name="Logger"/>
     </flow>
-    <flow name="select\get_by_id_contract_process">
+    <flow name="getContractByIdProcess">
         <logger message="in get single contract: contrat id= #[flowVars.contract_id] and if-none-match= #[message.inboundProperties.'If-None-Match']" level="INFO" doc:name="Logger"/>
         <set-variable variableName="noMatch" value="#[message.inboundProperties.'If-None-Match']" doc:name="Variable"/>
         <http:request config-ref="contract_HTTP_Request_Configuration" path="{contract_id}" method="GET" doc:name="Get contract from sys">
@@ -201,11 +201,11 @@ payload]]></dw:set-variable>
         </dw:transform-message>
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
     </flow>
-    <flow name="select\get_all_contract_process">
+    <flow name="getAllContractsProcess">
         <logger message="get all contract process: product_id= #[message.inboundProperties.'http.query.params'.product_id] and contract_name= #[message.inboundProperties.'http.query.params'.contract_name]" level="INFO" doc:name="Logger"/>
         <set-variable variableName="original_params" value="#[message.inboundProperties.'http.query.params']" doc:name="initial_params"/>
         
-        <flow-ref name="get_collection_filtering" doc:name="get_collection_filtering"/>
+        <flow-ref name="getCollectionFiltering" doc:name="getCollectionFiltering"/>
         <dw:transform-message doc:name="Save system contract list" metadata:id="8a21dda2-0ab4-4a75-8d99-88adc91a4ef8">
             <dw:input-payload mimeType="application/json"/>
             <dw:set-variable variableName="system_contract_list"><![CDATA[%dw 1.0
@@ -217,30 +217,13 @@ payload]]></dw:set-variable>
         <choice doc:name="Filter contract list by offer params">
             <when expression="#[(flowVars.original_params.entitlement_name != null) || (flowVars.original_params.product_name != null)]">
                 <set-variable variableName="offer_filtered_contract_list" value="#[new java.util.ArrayList()]" mimeType="application/json" doc:name="New empty contract list"/>
-                <choice doc:name="get offer by product id, filtered by params">
-                    <when expression="#[(flowVars.original_params.entitlement_name != null) &amp;&amp; (flowVars.original_params.product_name == null)]">
-                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="entitlement_name">
-                            <http:request-builder>
-                                <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
-                            </http:request-builder>
-                        </http:request>
-                    </when>
-                    <when expression="#[flowVars.original_params.entitlement_name == null &amp;&amp; flowVars.original_params.product_name != null]">
-                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="product name">
-                            <http:request-builder>
-                                <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
-                            </http:request-builder>
-                        </http:request>
-                    </when>
-                    <otherwise>
-                        <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="both">
-                            <http:request-builder>
-                                <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
-                                <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
-                            </http:request-builder>
-                        </http:request>
-                    </otherwise>
-                </choice>
+                <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="GET" doc:name="get offers, filtering by product name and entitlement name">
+                    <http:request-builder>
+                        <http:query-param paramName="entitlement_name" value="#[flowVars.original_params.entitlement_name]"/>
+                        <http:query-param paramName="product_name" value="#[flowVars.original_params.product_name]"/>
+                    </http:request-builder>
+                </http:request>
+
                 <dw:transform-message doc:name="Transform Payload into Java">
                     <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
@@ -324,7 +307,7 @@ for(Object contract: contracts) {
 
         <foreach doc:name="Make the full process contract object from the id of the system contract object">
             <set-variable variableName="contract_id" value="#[payload.id]" doc:name="get id from contract" mimeType="application/json"/>
-            <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process"/>
+            <flow-ref name="getContractByIdProcess" doc:name="getContractByIdProcess"/>
             <expression-transformer expression="#[flowVars.process_contracts.add(payload)]" doc:name="Add retrieved contract to process contracts' list" mimeType="application/json"/>
         </foreach>
         
@@ -336,7 +319,7 @@ flowVars.process_contracts]]></dw:set-payload>
         </dw:transform-message>
 
     </flow>
-    <flow name="insert\post_contract_process">
+    <flow name="postContractProcess">
         <dw:transform-message doc:name="Save original body as 'params'" metadata:id="a574e263-7f6a-406d-8175-e356e1267482">
             <dw:set-variable variableName="params"><![CDATA[%dw 1.0
 %output application/java
@@ -477,7 +460,7 @@ flowVars.params.customer_id= chunks[chunks.size() -1];]]></expression-component>
             </otherwise>
         </choice>
     </flow>
-    <sub-flow name="get_collection_filtering">
+    <sub-flow name="getCollectionFiltering">
     <choice doc:name="Check which contract filtering params were passed">
             <when expression="#[message.inboundProperties.'http.query.params'.product_id!=null &amp;&amp; message.inboundProperties.'http.query.params'.customer_id == null &amp;&amp; message.inboundProperties.'http.query.params'.contract_name == null]">
                 <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="GET" doc:name="get contracts filtered by product_id">

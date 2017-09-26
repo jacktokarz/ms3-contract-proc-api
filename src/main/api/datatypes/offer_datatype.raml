@@ -3,11 +3,13 @@ type: object
 properties:
   product_id:
     type: number
-    required: true
+    required: false
   product_name: 
     type: string
-  product_description: 
+    required: false
+  product_description:
     type: string
-  entitlements:
+    required: false
+  product_entitlements:
     type: entitlement[]
     required: false

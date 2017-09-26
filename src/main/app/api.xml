@@ -4,40 +4,35 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
     <flow name="api-main">
-        <http:listener config-ref="HttpListenerConfig" path="/contract_process_api/*" doc:name="HTTP" />
+        <http:listener config-ref="HttpListenerConfig" path="/api/process/contracts/*" doc:name="HTTP" />
         <apikit:router config-ref="api-config" doc:name="APIkit Router" />
         <exception-strategy ref="api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
     </flow>
     <flow name="api-console">
-        <http:listener config-ref="HttpListenerConfig" path="/contract_process_console/*" doc:name="HTTP" />
+        <http:listener config-ref="HttpListenerConfig" path="/console/process/contracts/*" doc:name="HTTP" />
         <apikit:console config-ref="api-config" doc:name="APIkit Console" />
     </flow>
     <flow name="delete:/contracts/{contract_id}:api-config">
         <logger message="Contract process called to delete contract #[flowVars.contract_id]" level="INFO" doc:name="Logger" />
-        <flow-ref name="delete_contract_process" doc:name="delete_contract_process" />
+        <flow-ref name="deleteContractProcess" doc:name="deleteContractProcess" />
     </flow>
     <flow name="patch:/contracts/{contract_id}:application/json:api-config">
         <logger message="Patch called from contract process for contract id: #[flowVars.contract_id]" level="INFO" doc:name="Logger" />
-        <flow-ref name="update\patch_contract_process" doc:name="update\patch_contract_process" />
+        <flow-ref name="patchContractProcess" doc:name="patchContractProcess" />
     </flow>
     <flow name="get:/contracts:api-config">
         <logger message="called Get All in contract process" level="INFO" doc:name="Logger" />
-        <flow-ref name="select\get_all_contract_process" doc:name="select\get_all_contract_process" />
+        <flow-ref name="getAllContractsProcess" doc:name="getAllContractsProcess" />
     </flow>
     <flow name="get:/contracts/{contract_id}:api-config">
         <logger message="Get by contract id called in contract process with id: #[flowVars.contract_id]" level="INFO" doc:name="Logger" />
-        <flow-ref name="select\get_by_id_contract_process" doc:name="select\get_by_id_contract_process" />
+        <flow-ref name="getContractByIdProcess" doc:name="getContractByIdProcess" />
     </flow>
     <flow name="post:/contracts:application/json:api-config">
         <logger message="Calling POST in contract_process" level="INFO" doc:name="Logger" />
-        <flow-ref name="insert\post_contract_process" doc:name="insert\post_contract_process" />
+        <flow-ref name="postContractProcess" doc:name="postContractProcess" />
     </flow>
-    <flow name="patch:/contracts/{contract_id}:api-config">
-        <set-payload value="{ This is bad. }" doc:name="Set Payload" />
-    </flow>
-    <flow name="post:/contracts:api-config">
-        <set-payload value="{&#xA;message: Conflict detected while inserting the record,&#xA;code: 409&#xA;}" doc:name="Set Payload" />
-    </flow>
+
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
