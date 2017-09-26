@@ -337,9 +337,15 @@ flowVars.process_contracts]]></dw:set-payload>
 
     </flow>
     <flow name="insert\post_contract_process">
-        <set-session-variable variableName="params" value="#[message.inboundProperties.'http.query.params']" doc:name="Session Variable"/>
-        <choice doc:name="Check for incoming product_id">
-            <when expression="#[sessionVars.params.product_id == null]">
+        <dw:transform-message doc:name="Save original body as 'params'" metadata:id="a574e263-7f6a-406d-8175-e356e1267482">
+            <dw:set-variable variableName="params"><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-variable>
+        </dw:transform-message>
+
+        <choice doc:name="Check for incoming product_id, to see if offer already exists">
+            <when expression="#[flowVars.params.product_id == null]">
                 <expression-component doc:name="Save entitlements"><![CDATA[java.util.HashMap entitlements = new java.util.HashMap();
 		for(Object obj: sessionVars.params.entrySet()) {
 			if(obj.getKey().contains("entitlement_")) {
@@ -347,52 +353,112 @@ flowVars.process_contracts]]></dw:set-payload>
 			}
 		}
 flowVars.entitlements= entitlements;]]></expression-component>
+                <dw:transform-message doc:name="Set payload with offer parameters">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	product_name: flowVars.params.product_name,
+	product_description: flowVars.params.product_description,
+	entitlements: flowVars.params.product_entitlements
+}]]></dw:set-payload>
+                </dw:transform-message>
                 <http:request config-ref="offer_HTTP_Request_Configuration" path="/" method="POST" doc:name="make offer">
                     <http:request-builder>
-                        <http:query-param paramName="name" value="#[sessionVars.params.product_name]"/>
-                        <http:query-param paramName="description" value="#[sessionVars.params.product_description]"/>
-                        <http:query-params expression="#[flowVars.entitlements]"/>
                         <http:header headerName="content-type" value="application/json"/>
+
 
                     </http:request-builder>
                 </http:request>
-                <set-session-variable variableName="product_id" value="#[message.inboundProperties.'http.query.params'.passed_product_id]" doc:name="Session Variable"/>
+                <expression-component doc:name="Get product_id from passed location"><![CDATA[import java.util.*;
+
+String location = message.inboundProperties.Location;
+
+System.out.println("the passed location property is: "+location);
+
+List<String> chunks= location.split("/");
+
+//the id is added to the end of the address, after the last '/'
+flowVars.params.product_id= chunks[chunks.size() -1];]]></expression-component>
+
                 <logger message="contract_process_post: Offer Created" level="INFO" doc:name="Logger"/>
             </when>
             <otherwise>
-                <set-session-variable variableName="product_id" value="#[sessionVars.params.product_id]" doc:name="Session Variable"/>
-                <http:request config-ref="offer_HTTP_Request_Configuration" path="/{productId}" method="GET" doc:name="get offer">
-                    <http:request-builder>
-                        <http:uri-param paramName="productId" value="#[sessionVars.params.product_id]"/>
-                        <http:header headerName="if-none-match" value="#[message.inboundProperties.'if-none-match']"/>
-                        <http:header headerName="content-type" value="application/json"/>
 
+                <logger message="contract_process_post: Offer Already exists" level="INFO" doc:name="No need to make offer, product_id was passed"/>
+            </otherwise>
+        </choice>
+        <choice doc:name="Check for incoming customer id and person id, to see if client already exists">
+            <when expression="#[(flowVars.params.person_id == null) &amp;&amp; (flowVars.params.customer_id == null)]">
+                <dw:transform-message doc:name="Set payload with client params">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+// first person attributes
+	first_name: flowVars.params.first_name,
+	last_name: flowVars.params.last_name,
+	phone_number: flowVars.params.phone_number,
+	email: flowVars.params.email,
+	notes: flowVars.params.person_notes,
+// customer
+	hq_address_id: flowVars.params.hq_address_id,
+	alt_address_id: flowVars.params.alt_address_id,
+	name: flowVars.params.customer_name,
+	billing_email: flowVars.params.billing_email,
+	customer_notes: flowVars.params.customer_notes,
+//location	
+	city: flowVars.params.city,
+	line_1: flowVars.params.line_1,
+	line_2: flowVars.params.line_2,
+	state:flowVars.params.state,
+	zip_code:flowVars.params.zip_code
+}]]></dw:set-payload>
+                </dw:transform-message>
+                <http:request config-ref="client_HTTP_Request_Configuration" path="/" method="POST" doc:name="make client">
+                    <http:request-builder>
+                        <http:header headerName="Content-Type" value="application/json"/>
                     </http:request-builder>
                 </http:request>
-                <logger message="contract_process_post: Offer Already exists" level="INFO" doc:name="Logger"/>
-            </otherwise>
-        </choice>
-        <logger message="Placeholder for Client Creation" level="INFO" doc:name="Placeholder for Client Creation"/>
-        <choice doc:name="Check for incoming customer_id">
-            <when expression="#[sessionVars.params.customer_id == null]">
-                <logger message="Filler for making a customer" level="INFO" doc:name="Standing in for calling post on customer_offer"/>
+                <expression-component doc:name="Get person id and customer id from passed location"><![CDATA[import java.util.*;
+
+String location = message.inboundProperties.Location;
+
+System.out.println("the passed location property is: "+location);
+
+List<String> chunks= location.split("/");
+
+flowVars.params.person_id= chunks[chunks.size() -2];
+flowVars.params.customer_id= chunks[chunks.size() -1];]]></expression-component>
+                <logger message="The client post has been called successfully." level="INFO" doc:name="client created"/>
             </when>
             <otherwise>
-                <logger message="didn't have to make a customer because was passed a customer_id" level="INFO" doc:name="Logger"/>
+                <logger message="Not making client..." level="INFO" doc:name="No need to make client, customer and person id's were passed."/>
             </otherwise>
         </choice>
+
         <choice doc:name="Check for incoming contract_id">
             <when expression="#[sessionVars.params.contract_id == null]">
+                <dw:transform-message doc:name="Set payload with contract params">
+                    <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	escalation_contact_id: flowVars.params.person_id,
+	product_id: flowVars.params.product_id,
+	customer_id: flowVars.params.customer_id,
+	contract_name: flowVars.params.contract_name,
+	contract_description: flowVars.params.contract_description,
+	sow: flowVars.params.sow,
+	entitlement_update_list: flowVars.params.entitlement_update_list,
+	start_date: flowVars.params.start_date,
+	end_date: flowVars.params.end_date
+}]]></dw:set-payload>
+                </dw:transform-message>
                 <http:request config-ref="contract_HTTP_Request_Configuration" path="/" method="POST" doc:name="Make Contract">
                     <http:request-builder>
-                        <http:query-param paramName="description" value="#[sessionVars.params.contract_name]"/>
-                        <http:query-param paramName="sow" value="#[sessionVars.params.sow]"/>
-                        <http:query-param paramName="start_date" value="#[sessionVars.params.start_date]"/>
-                        <http:query-param paramName="end_date" value="#[sessionVars.params.end_date]"/>
-                        <http:query-param paramName="entitlement_update_list" value="#[sessionVars.params.entitlement_update_list]"/>
-                        <http:query-param paramName="escalation_contact_id" value="#[sessionVars.params.escalation_contact_id]"/>
-                        <http:query-param paramName="product_id" value="#[sessionVars.product_id]"/>
-                        <http:query-param paramName="customer_id" value="#[flowVars.passed_customer_id]"/>
+                        <http:header headerName="Content_Type" value="application/json"/>
+
 
                     </http:request-builder>
                 </http:request>
