@@ -1,0 +1,74 @@
+#%RAML 1.0 DataType
+
+description: 'The Contract object'
+type: object
+properties:
+    id: 
+      description: 'the unique id for this contract' 
+      minimum: 1 
+      default: 123 
+      example: 123
+      type: number
+      required: false
+    contract_name: 
+      description: 'The name used to identify this contract'
+      minLength: 1
+      default: contract
+      example: 'The Date Contract with Company'
+      type: string
+      required: false
+    contract_description:
+      description: 'Gives more details about this contract'
+      example: 'This contract was made by Employee on Date to cover Details about More Details.'
+      type: string
+      required: false
+    sow: 
+      description: 'Indicates the level of care we have promised to provide the customer.'
+      default: standard
+      example: platinum
+      type: string
+      required: false
+      enum: [gold, platinum, standard, economy]
+    customer_id:
+      description: 'The identifier for the customer this contract applies to'
+      minimum: 1
+      default: 123
+      example: 123
+      type: number
+      required: false
+    product_id:
+      description: 'The identifier for the product this contract provides to the customer.'
+      minimum: 1
+      default: 123
+      example: 123
+      type: number
+      required: false
+    escalation_contact_id:
+      description: 'The contact identifier for who to contact about changing the details of this contract.'
+      minimum: 1
+      default: 123
+      example: 123
+      type: number
+      required: false
+    entitlement_update_list:
+      description: 'A list of ids of entitlements that are specific to this contract, differing from the default product.'
+      minItems: 0
+      example: [123, 1234, 321, 1423]
+      type: array
+      required: false
+      uniqueItems: true
+      items:
+        minimum: 1
+        default: 123
+        example: 123
+        type: number
+    start_date:
+      description: 'The date this contract begins'
+      type: string
+      example: 2017-06-30
+      required: false
+    end_date:
+      description: 'The date this contract ends'
+      type: string
+      example: 2019-06-30
+      required: false

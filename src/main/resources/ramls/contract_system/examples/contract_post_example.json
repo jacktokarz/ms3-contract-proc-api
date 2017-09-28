@@ -1,0 +1,11 @@
+{
+    "product_id": 37,
+    "escalation_contact_id": 926,
+    "contract_name": "July Hertz Contract",
+    "contract_description": "The contract we made with Hertz in July for API's and other things.",
+    "sow": "platinum",
+    "start_date": "2017-07-01",
+    "end_date": "2019-06-30",
+    "entitlement_update_list": [123, 1234, 321, 1423],
+    "customer_id": 569
+}

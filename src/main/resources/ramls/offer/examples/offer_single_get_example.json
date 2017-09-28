@@ -1,0 +1,26 @@
+{
+  "product_id": 17,
+  "product_name": "Mulesoft runtime",
+  "product_description": "The basic service level agreement",
+  "product_entitlements": [
+    {
+      "entitlements": [
+        {
+          "entitlement_id": 3,
+          "entitlement_name": "ent 3",
+          "entitlement_description": "entdescr3"
+        },
+        {
+          "entitlement_id": 4,
+          "entitlement_name": "ent4",
+          "entitlement_description": "entdescr4"
+        },
+        {
+          "entitlement_id": 5,
+          "entitlement_name": "ent5",
+          "entitlement_description": "entdescr5 patched"
+        }
+      ]
+    }
+  ]
+}

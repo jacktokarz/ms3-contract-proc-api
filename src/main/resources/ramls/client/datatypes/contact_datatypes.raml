@@ -1,0 +1,62 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+  address_id:
+    required: false
+    type: number
+  line_1:
+    required: false
+    type: string
+  line_2: 
+    required: false
+    type: string
+  state: 
+    required: false
+    type: string
+  city: 
+    required: false
+    type: string
+  zip_code: 
+    required: false
+    type: string
+  person_id:
+    required: false
+    type: number
+  position: 
+    required: false
+    type: string
+  first_name: 
+    required: false
+    type: string
+  last_name: 
+    required: false
+    type: string
+  phone_number: 
+    required: false
+    type: string
+  email: 
+    required: false
+    type: string
+  notes: 
+    required: false
+    type: string
+  customer_id:  
+    required: false
+    type: number
+    
+example: |
+         {
+            "line_1": "12 main street",
+            "line_2":"asdf",
+            "state":"WV",
+            "city":"Ranson",
+            "zip_code":"25438",
+            "person_id":901,
+            "address_id": 122,
+            "first_name": "Josh",
+            "last_name":"Perry",
+            "phone_number":"839-939-8392",
+            "email":"josh.perry@mail.com",
+            "notes":"some notes",
+            "customer_id":1234
+         }

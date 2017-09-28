@@ -1,0 +1,160 @@
+#%RAML 1.0
+title: Offer Process API
+mediaType: application/json
+baseUri: https://localhost:8081/api/process/offers
+types:
+  entitlement:
+   type: !include data-types/entitlement_datatype.yaml
+  product:
+   type: !include data-types/product_datatype.yaml
+  offer:
+    type: !include data-types/offer_datatype.raml
+  contract:
+    type: !include data-types/contract_datatype.yaml
+  errorcode:
+     type: !include data-types/errorcode_datatype.yaml
+protocols: [ HTTPS ]
+/:
+  get:
+    queryParameters:
+      entitlement_name:
+        type: string
+        required: false
+      product_name:
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: offer[]
+            example: !include examples/offer_collection_get_example.json
+      400:
+        description: If there is an error in syntax while sending the request body
+        body:
+          application/json:
+            type: errorcode
+  post:
+    body:
+      application/json:
+        type: offer
+        example: !include examples/offer_example.json
+    responses:
+      201:
+        headers:
+          Location:
+            displayName: Location
+            type: string
+            example: http://localhost:8081/api/process/offers/1
+            required: true
+      400:
+        description: If there is an error in syntax while sending the request body
+        body:
+          application/json:
+            type: errorcode
+      409:
+        description: When you try to post the same record again
+        body:
+          application/json:
+            type: errorcode
+      415:
+        description: If media type of the request body is different
+        body:
+          application/json:
+            type: errorcode
+/{productId}:
+  uriParameters:
+    productId:
+      type: number
+      example: 11
+      required: true
+  get:
+    headers:
+      If-None-Match:
+        type: string
+        description: |
+            The request will be processed only if the eventually existing resource's Etag doesn't match the value.
+        example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+    responses:
+      200:
+        headers:
+          Etag:
+            displayName: Etag
+            type: string
+            example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+            required: true
+        body:
+          application/json:
+            type: offer
+            example: !include examples/offer_single_get_example.json
+      304:
+        description: If the value you send in If-None-Match matches with resource's ETag, you have the latest record
+        body:
+          application/json:
+            type: errorcode
+      400:
+        description: If there is an error in syntax sending the request body
+        body:
+          application/json:
+            type: errorcode
+      404:
+        description: If there is no record found
+        body:
+          application/json:
+            type: errorcode
+  delete:
+    responses:
+      200: 
+        description: Record deleted successfully
+      400:
+        description: If there is an error in syntax sending the request body
+        body:
+          application/json:
+            type: errorcode
+      404:
+        description: If there is no record found
+        body:
+          application/json:
+            type: errorcode
+  patch:
+    description: Update a record
+    headers:
+      If-Match:
+        type: string
+        description: |
+           Defines a precondition for updating the resource only if the versions match that header
+        example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+    body:
+      application/json:
+        type: offer
+        example: !include examples/offer_example.json
+    responses:
+      204:
+        description: Resource has been modified successfully.
+        headers:
+          Etag:
+            displayName: Etag
+            description: The current version of the resource
+            type: string
+            example: c7493-d7-a6b64d37f6cc3
+      400:
+        description: If there is an error in syntax sending the request body
+        body:
+          application/json:
+            type: errorcode
+      404:
+        description: If there is no record found
+        body:
+          application/json:
+            type: errorcode
+      412:
+        description: If If-Match value doesn't match with resource's etag, you need to get latest version of the record 
+        headers:
+          Etag:
+            displayName: Etag
+            description: The new version of the resource
+            type: string
+            example: c7493-d7-a6b64d37f6cc3
+        body:
+          application/json:
+            type: errorcode

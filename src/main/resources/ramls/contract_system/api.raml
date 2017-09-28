@@ -1,0 +1,157 @@
+#%RAML 1.0
+title: Contracts system API
+version: "1.0"
+mediaType: application/json
+baseUri: http://localhost:8081/api/sys/contracts
+types:
+  Contract: !include types/Contract.raml
+  Error: !include errormessages/error_messages.raml
+  
+protocols: [HTTP, HTTPS]
+/:
+  post:
+    body:
+      application/json:
+        type: Contract
+        example: !include examples/contract_post_example.json
+    responses:
+      201:
+        headers:
+          Location:
+            description: URI pointing to the location of the newly created contract
+            example: http://localhost:8081/api/sys/contracts/123
+      409:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/409Message.json
+      400:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/400Message.json
+      412:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/412Message.json
+  
+  get:
+    description: Retrieve all of the contracts, sometimes filtered by a query-parameter
+    queryParameters:
+      name:
+        description: Filter the selected contracts by name
+        type: string
+        required: false
+      customer_id:
+        description: Filter the selected contracts by customer id
+        type: number
+        required: false
+      product_id:
+        description: Filter the selected contracts by product id
+        type: number
+        required: false
+      
+    responses:
+      200:
+        body:
+          application/json:
+            type: Contract[]
+      400:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/400Message.json
+
+/{contract_id}:
+  displayName: contract_id
+  description: Fetch the contract information for the given contract_id
+  uriParameters:
+    contract_id:
+      type: integer
+      example: 123
+      required: true
+  get:
+    description: To retrieve information about a certain contract
+    headers:
+        If-None-Match:
+          type: string
+          description: The request will be processed only if the eventually existing resource's ETag doesn't match the value.
+          example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/contracts_example.json
+        headers:
+          ETag:
+            displayName: ETag
+            description: The current version of the resource
+            type: string
+            example: c7493-d7-a6b64d37f6cc3
+      400:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/400Message.json
+      404:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/404Message.json
+      304:
+          body:
+            type: Error
+            example: !include examples/304Message.json
+  patch:
+    description: Update an entry with new information
+    body:
+      application/json:
+        !include types/Contract.raml
+    headers:
+      If-Match:
+        type: string
+        description: defines a precondition for updating the resource only if the versions match that header
+        example: c7493-d7-a6b64d37f6cc3
+    responses:
+      204:
+        headers:
+          ETag:
+            displayName: ETag
+            description: The current version of the resource
+            type: string
+            example: c7493-d7-a6b64d37f6cc3
+      400:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/400Message.json
+      404:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/404Message.json
+      412:
+        headers:
+          ETag:
+            displayName: ETag
+            description: The new version of the resource
+            type: string
+            example: c7493-d7-a6b64d37f6cc3
+  delete:
+    description: To delete a particular contract
+    responses:
+      204:
+        body:
+          application/json:
+            example: !include examples/204Message.json
+      400:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/400Message.json
+      404:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/404Message.json

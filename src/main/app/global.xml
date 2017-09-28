@@ -9,14 +9,18 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
-    <secure-property-placeholder:config name="Secure_Property_Placeholder" encryptionAlgorithm="Blowfish" key="${app.key}" location="${mule.env}.properties" doc:name="Secure Property Placeholder"/>
-    <http:request-config name="NoBase_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" doc:name="HTTP Request Configuration"/>
-    <http:request-config name="contract_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${contract.path}" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="contract_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="/api/sys/contracts" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="ramls/contract_system/api.raml"/>
+    </http:request-config>
  
  
  <expression-filter expression="#[!flowVars.system_contract_list.isEmpty()]" name="IfContractSystemListIsEmpty" doc:name="Expression"/>
  
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" keepRamlBaseUri="false"/>
-    <http:request-config name="offer_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${offer.path}" doc:name="HTTP Request Configuration"/>
-    <http:request-config name="client_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="${client.path}" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="offer_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="/api/process/offers" doc:name="HTTP Request Configuration"  >
+        <http:raml-api-configuration location="ramls/offer/api.raml"/>
+    </http:request-config>
+    <http:request-config name="client_HTTP_Request_Configuration" host="${http.host}" port="${http.port}" basePath="/api/process/clients" doc:name="HTTP Request Configuration">
+        <http:raml-api-configuration location="ramls/client/client_api.raml"/>
+    </http:request-config>
 </mule>

@@ -129,7 +129,7 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.7-dmr</version>
         </dependency>
-<!--
+
 	<dependency>
             <groupId>com.ms3.domain</groupId>
             <artifactId>operations-domain</artifactId>
@@ -137,7 +137,7 @@
             <scope>test</scope>
             <type>zip</type>
         </dependency>
--->
+
     <dependency>
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-module-spring-config</artifactId>
