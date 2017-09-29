@@ -2,17 +2,17 @@
 	"contract_name":"CFA_Contract",
 	"contract_description":"Description for CFA contract",
 	"sow":"platinum",
-	"entitlement_update_list":"123",
+	"entitlement_update_list":"12, 31",
 	"start_date":"2017-06-30",
 	"end_date":"2019-06-30",
 	
 	"contact": {
-		"person_id": 1414,
 		"first_name": "Josh",
 		"last_name":"Perry",
 		"phone_number":"839-939-8392",
 		"email":"josh.perry@mail.com",
 		"person_notes":"some notes",
+		"position": "Computer Guy",
 		"line_1": "308 S Fairfax Blvd",
 		"line_2":"S",
 		"state":"WV",
@@ -20,11 +20,11 @@
 		"zip_code":"25438"
 	},
 	"customer": {
-		"customer_id": 19662,
 		"customer_name": "CFA",
 		"hq_address_id":1921,
 		"alt_address_id":1923,
 		"billing_email":"alberto@cfa.com",
+		"poc_id": 444,
 		"customer_notes":"This is a note"
 	},
 	

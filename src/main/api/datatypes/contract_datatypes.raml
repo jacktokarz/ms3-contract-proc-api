@@ -52,16 +52,9 @@ properties:
       required: false
     entitlement_update_list:
       description: 'A list of ids of entitlements that are specific to this contract, differing from the default product.'
-      minItems: 0
-      example: [123, 1234, 321, 1423]
-      type: array
+      type: string
+      example: 11,12,14
       required: false
-      uniqueItems: true
-      items:
-        minimum: 1
-        default: 123
-        example: 123
-        type: number
     start_date:
       description: 'The date this contract begins'
       type: string

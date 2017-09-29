@@ -87,6 +87,7 @@ protocols: [ HTTP, HTTPS ]
     body:
       application/json:
         type: ContractMaster
+        example: !include examples/contract_patch_example.json
     responses:
       201:
         headers:
@@ -190,6 +191,7 @@ protocols: [ HTTP, HTTPS ]
     body:
       application/json:
         type: ContractMaster
+        example: !include examples/contract_patch_example.json
     responses:
       204:
         description: "The contact has been successfully updated!"
