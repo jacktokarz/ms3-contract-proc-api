@@ -127,7 +127,8 @@ payload]]></dw:set-variable>
             <http:request-builder>
                 <http:uri-param paramName="customer_id" value="#[flowVars.ids.customer_id[0]]"/>
                 <http:uri-param paramName="person_id" value="#[flowVars.ids.person_id[0]]"/>
-                <http:header headerName="If-Match" value="#[flowVars.inbound.'If-Match']"/>
+                <http:header headerName="If-Match" value="#[flowVars.inbound.'person-If-Match']"/>
+
             </http:request-builder>
         </http:request>
 
