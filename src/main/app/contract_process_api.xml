@@ -198,7 +198,7 @@ payload]]></dw:set-variable>
 %output application/json
 ---
 {
-	contract: flowVars.get_contract,
+	contract: flowVars.contract,
 	offer: flowVars.get_offer,
 	client: payload
 }]]></dw:set-payload>
@@ -206,7 +206,7 @@ payload]]></dw:set-variable>
         <logger message="Got a contract: #[payload]" level="INFO" doc:name="Logger"/>
     </flow>
     <flow name="getAllContractsProcess">
-        <logger message="get all contract process: product_id= #[message.inboundProperties.'http.query.params'.product_id] and contract_name= #[message.inboundProperties.'http.query.params'.contract_name]" level="INFO" doc:name="Logger"/>
+
         <set-variable variableName="original_params" value="#[message.inboundProperties.'http.query.params']" doc:name="initial_params"/>
         
         <flow-ref name="getCollectionFiltering" doc:name="getCollectionFiltering"/>
@@ -232,8 +232,9 @@ payload]]></dw:set-variable>
                     <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
-payload.offers]]></dw:set-payload>
+payload]]></dw:set-payload>
                 </dw:transform-message>
+                <logger message="got offers: #[payload]" level="INFO" doc:name="Logger"/>
                 <expression-component doc:name="add to new list if they match"><![CDATA[import java.util.*;
 
 ArrayList offers= payload;
@@ -256,7 +257,7 @@ for(Object contract: contracts) {
                 <logger message="Not filtering contract list by offer params." level="INFO" doc:name="No need to filter if there are no offer related params"/>
             </otherwise>
         </choice>
-        <logger message="contract process get all: got all contract id's: #[payload]" level="INFO" doc:name="Logger"/>
+        <logger message="++++++++++++++++++contract process get all: got all contract id's: #[flowVars.system_contract_list]" level="INFO" doc:name="Logger"/>
         
         <filter ref="IfContractSystemListIsEmpty" doc:name="Filter is list is empty"/>
         
@@ -305,7 +306,7 @@ for(Object contract: contracts) {
                 <logger message="contract process get all: Got all contracts: #[flowVars.system_contract_list]" level="INFO" doc:name="Logger"/>
             </otherwise>
         </choice>
-        <logger message="Filtered by client query params" level="INFO" doc:name="Logger"/>
+        <logger message="Filtered by client query params ++++++++++++++++ #[flowVars.system_contract_list]" level="INFO" doc:name="Logger"/>
         <filter ref="IfContractSystemListIsEmpty" doc:name="Filter if list is empty"/>
         <set-payload value="#[flowVars.system_contract_list]" doc:name="Set Payload as system contract list"/>
         <set-variable variableName="process_contracts" value="#[new java.util.ArrayList()]" doc:name="set empty process contracts list"/>
