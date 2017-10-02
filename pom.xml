@@ -124,11 +124,6 @@
 			<version>${mule.version}</version>
 			<scope>test</scope>
 		</dependency>
-    	<dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.7-dmr</version>
-        </dependency>
 
 	<dependency>
             <groupId>com.ms3.domain</groupId>
