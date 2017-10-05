@@ -1,0 +1,51 @@
+{
+	"contract_name":"CFA_Contract",
+	"contract_description":"Description for CFA contract",
+	"sow":"platinum",
+	"entitlement_update_list":"12, 31",
+	"start_date":"2017-06-30",
+	"end_date":"2019-06-30",
+	
+	"contact": {
+		"first_name": "Josh",
+		"last_name":"Perry",
+		"phone_number":"839-939-8392",
+		"email":"josh.perry@mail.com",
+		"person_notes":"some notes",
+		"position": "Computer Guy",
+		"line_1": "308 S Fairfax Blvd",
+		"line_2":"S",
+		"state":"WV",
+		"city":"Ranson",
+		"zip_code":"25438"
+	},
+	"customer": {
+		"customer_name": "CFA",
+		"hq_address_id":1921,
+		"alt_address_id":1923,
+		"billing_email":"alberto@cfa.com",
+		"poc_id": 444,
+		"customer_notes":"This is a note"
+	},
+	
+	"product_id": 11535,
+	"product_name": "Ops Support Economy",
+	"product_description": "The basic service level agreement",
+	"product_entitlements" : {
+		"entitlement_1": {
+		    "entitlement_id": 3,
+			"entitlement_name": "Prod- 24 Hr Response",
+			"entitlement_description": "MS3 will react to any issue in a prod environment within 24 hours, inside normal support hours."
+		},
+		"entitlement_2": {
+	    	"entitlement_id": 4,
+			"entitlement_name": "Unlimited Online or Email Ticket Creation",
+			"entitlement_description": "The ability to make an unlimited amount of tickets for MS3 developers to work on."
+		},
+		"entitlement_3": {
+		    "entitlement_id": 5,
+			"entitlement_name": "Daily Monitoring of the Integrations",
+			"entitlement_description": "The integrations will be checked daily for any issues."
+		}
+	}
+}

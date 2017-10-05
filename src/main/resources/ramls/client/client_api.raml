@@ -1,23 +1,33 @@
 #%RAML 1.0
-title: Contract process API
-version: "1.0"
+title: Client process API
+version: 1.0
 mediaType: application/json
-baseUri: http://localhost:8081/api/process/contracts
+baseUri: http://localhost:8081/api/process/clients
+protocols: [ HTTP, HTTPS ]
 types:
-  entitlement:
-    type: !include datatypes/entitlement_datatype.raml
-  ContractMaster:
-    type: !include datatypes/contract_master_datatypes.raml
+  Client:
+    type: !include datatypes/client_datatypes.raml
   Error:
     type: !include errormessages/error_messages.raml
 
 
-protocols: [ HTTP, HTTPS ]
+
 /:
-  description: Fetch all the contracts based on the query parameters like name
+  description: Fetch all the clients based on the query parameters like name
   get:
     queryParameters:
-#Based on query parameters of client
+      first_name:
+        type: string
+        required: false
+        description: Fetch the client details based on first_name
+      last_name:
+        type: string
+        required: false
+        description: Fetch the client details based on last_name
+      position:
+        type: string
+        required: false
+        description: Fetch the client details based on position
       state:
         type: string
         required: false
@@ -30,52 +40,19 @@ protocols: [ HTTP, HTTPS ]
         type: string
         required: false
         description: Fetch the client details based on zip-code
-      client_name:
-        type: string
-        required: false
-        description: Fetch the client details based on client name
-      poc_id:
-        type: number
-        required: false
-        description: Fetch the customer details based on person_id
-      position:
-        type: string
-        required: false
-        description: Fetch the client details based on position
-      first_name:
-        type: string
-        required: false
-        description: Fetch the client details based on first_name
-      last_name:
-        type: string
-        required: false
-        description: Fetch the client details based on last_name
       name:
         type: string
         required: false
         description: Fetch the client details based on name
-#Query parameters based on offer process api
-      entitlement_name:
+      poc_id:
         type: string
         required: false
-      product_name:
-        type: string
-        required: false
-#Query parameters based on contract system api
-      product_id:
-        type: number
-        required: false
-      contract_name:
-        type: string
-        required: false
-      customer_id:
-        type: number
-        required: false
+        description: Fetch the client details based on poc_id(person id)
     responses:
       200:
         body:
           application/json:
-            type: ContractMaster[]
+            type: Client[]
 
       400:
         body:
@@ -86,14 +63,14 @@ protocols: [ HTTP, HTTPS ]
   post:
     body:
       application/json:
-        type: ContractMaster
-        example: !include examples/contract_patch_example.json
+        type: Client
+        example: !include examples/client_example.json
     responses:
       201:
         headers:
           Location:
-            description: URI pointing to the location of the newly created contact
-            example: http://localhost:8081/api/process/contracts/123
+            description: URI pointing to the location of the newly created client
+            example: http://localhost:8081/api/process/clients/123/5573
       409:
         body:
           application/json:
@@ -111,11 +88,14 @@ protocols: [ HTTP, HTTPS ]
             example: { "message" : "Precondition failed", "code" : 412 }
 
 
-/{contract_id}:
-  displayName: contract_id
-  description: Fetch the contact information for the given contract_id
+/{person_id}/{customer_id}:
+  displayName: person_id and customer_id
+  description: Fetch the client information for the given person_id and customer_id
   uriParameters:
-    contract_id:
+    person_id:
+      type: integer
+      required: true
+    customer_id:
       type: integer
       required: true
   get:
@@ -129,8 +109,8 @@ protocols: [ HTTP, HTTPS ]
       200:
         body:
           application/json:
-            type: ContractMaster
-            example: !include examples/contract_master_example.json
+            type: Client
+            example: !include examples/client_example.json
         headers:
             ETag:
               displayName: ETag
@@ -147,16 +127,11 @@ protocols: [ HTTP, HTTPS ]
           application/json:
             type: Error
             example: { "message" : "Resource not found", "code" : 404 }
-      304:
-          body:
-           application/json:
-            type: Error
-            example: { "message" : "Not Modified", "code" : 304 }
   delete:
-    description: To delete a particular contact
+    description: To delete a particular Client
     responses:
       204:
-        description: "Contract has been successfully deleted!"
+        description: "Client has been successfully deleted!"
       400:
         body:
           application/json:
@@ -174,27 +149,14 @@ protocols: [ HTTP, HTTPS ]
           description: |
             defines a precondition for updating the resource only if the versions match that header
           example: c7493-d7-a6b64d37f6cc3
-      product-If-Match:
-          type: string
-          required: false
-          example: c7493-d7-a6b64d37f6cc3
-      person-If-Match:
-          type: string
-          required: false
-          example: c7493-d7-a6b64d37f6cc3
-      If-None-Match:
-        type: string
-        description: |
-             The request will be processed only if the eventually existing resource's ETag doesn't match the value.
-        example: bfc13a64729c4290ef5b2c2730249c88ca92d82d
-        
     body:
       application/json:
-        type: ContractMaster
-        example: !include examples/contract_patch_example.json
+        type: Client
+        example: !include examples/client_example.json
+        required: false
     responses:
       204:
-        description: "The contact has been successfully updated!"
+        description: "The Client has been successfully updated!"
         headers:
             ETag:
               displayName: ETag
@@ -203,7 +165,7 @@ protocols: [ HTTP, HTTPS ]
               example: c7493-d7-a6b64d37f6cc3
       400:
         body:
-          application/json:
+          application/json:          
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
@@ -221,4 +183,4 @@ protocols: [ HTTP, HTTPS ]
           body:
             application/json:
               type: Error
-              example: { "message" : "Failed to modify. The resource has been modified by other process. please use GET /contracts/123 to retrieve the latest version of the resource.", "code" : 412 }
+              example: { "message" : "Failed to modify. The resource has been modified by other process. please use GET /Clients/123 to retrieve the latest version of the resource.", "code" : 412 }

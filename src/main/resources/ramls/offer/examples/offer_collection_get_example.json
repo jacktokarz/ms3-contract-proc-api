@@ -1,0 +1,100 @@
+[
+  {
+    "product_id": 1,
+    "product_name": "Ops Studio",
+    "product_description": "The basic service level agreement",
+    "product_entitlements": [
+      {
+        "entitlements": [
+          {
+            "entitlement_id": 3,
+            "entitlement_name": "ent 3",
+            "entitlement_description": "entdescr3"
+          },
+          {
+            "entitlement_id": 4,
+            "entitlement_name": "ent4",
+            "entitlement_description": "entdescr4"
+          },
+          {
+            "entitlement_id": 5,
+            "entitlement_name": "ent5",
+            "entitlement_description": "entdescr5 patched"
+          },
+          {
+            "entitlement_id": 6,
+            "entitlement_name": "ent6",
+            "entitlement_description": "entdescr6"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "product_id": 2,
+    "product_name": "api",
+    "product_description": "api desc",
+    "product_entitlements": [
+      {
+        "entitlements": [
+          {
+            "entitlement_id": 5,
+            "entitlement_name": "ent5",
+            "entitlement_description": "entdescr5 patched"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "product_id": 12,
+    "product_name": "Ops Support 1",
+    "product_description": "The basic service",
+    "product_entitlements": [
+      {
+        "entitlements": [
+          {
+            "entitlement_id": 3,
+            "entitlement_name": "ent 3",
+            "entitlement_description": "entdescr3"
+          },
+          {
+            "entitlement_id": 4,
+            "entitlement_name": "ent4",
+            "entitlement_description": "entdescr4"
+          },
+          {
+            "entitlement_id": 5,
+            "entitlement_name": "ent5",
+            "entitlement_description": "entdescr5 patched"
+          },
+          {
+            "entitlement_id": 6,
+            "entitlement_name": "ent6",
+            "entitlement_description": "entdescr6"
+          },
+          {
+            "entitlement_id": 7,
+            "entitlement_name": "ent7",
+            "entitlement_description": "entdescr7"
+          },
+          {
+            "entitlement_id": 8,
+            "entitlement_name": "ent8",
+            "entitlement_description": "entdescr8"
+          },
+          {
+            "entitlement_id": 9,
+            "entitlement_name": "ent9",
+            "entitlement_description": "entdescr9"
+          },
+          {
+            "entitlement_id": 10,
+            "entitlement_name": "ent10",
+            "entitlement_description": "entdescr10"
+          }
+        ]
+      }
+    ]
+  }
+]
