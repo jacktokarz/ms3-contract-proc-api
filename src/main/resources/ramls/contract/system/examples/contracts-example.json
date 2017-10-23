@@ -9,7 +9,7 @@
     "sow": "platinum",
     "start_date": "2017-07-01",
     "end_date": "2019-06-30",
-    "entitlement_update_list": "I don't know what should go here...",
+    "entitlement_update_list": "13",
     "customer_id": "3333"
   },
   "contract": {
@@ -21,7 +21,7 @@
     "sow": "gold",
     "start_date": "07/01/2017",
     "end_date": "07/01/2018",
-    "entitlement_update_list": "I don't know what should go here...",
+    "entitlement_update_list": "11, 12, 14",
     "customer_id": "4444"
   }
 }]

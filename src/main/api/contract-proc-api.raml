@@ -5,11 +5,11 @@ mediaType: application/json
 baseUri: http://localhost:8081/api/process/contracts
 types:
   entitlement:
-    type: !include datatypes/entitlement_datatype.raml
+    type: !include datatypes/entitlement-datatype.raml
   ContractMaster:
-    type: !include datatypes/contract_master_datatypes.raml
+    type: !include datatypes/contract-master-datatypes.raml
   Error:
-    type: !include errormessages/error_messages.raml
+    type: !include errormessages/error-messages.raml
 
 
 protocols: [ HTTP, HTTPS ]
@@ -26,49 +26,49 @@ protocols: [ HTTP, HTTPS ]
         type: string
         required: false
         description: Fetch the client details based on city
-      zip_code:
+      zipcode:
         type: string
         required: false
-        description: Fetch the client details based on zip-code
-      client_name:
+        description: Fetch the client details based on zipcode
+      clientName:
         type: string
         required: false
         description: Fetch the client details based on client name
-      poc_id:
+      pocId:
         type: number
         required: false
-        description: Fetch the customer details based on person_id
+        description: Fetch the customer details based on personId
       position:
         type: string
         required: false
         description: Fetch the client details based on position
-      first_name:
+      firstName:
         type: string
         required: false
-        description: Fetch the client details based on first_name
-      last_name:
+        description: Fetch the client details based on firstName
+      lastName:
         type: string
         required: false
-        description: Fetch the client details based on last_name
+        description: Fetch the client details based on lastName
       name:
         type: string
         required: false
         description: Fetch the client details based on name
 #Query parameters based on offer process api
-      entitlement_name:
+      entitlementName:
         type: string
         required: false
-      product_name:
+      productName:
         type: string
         required: false
 #Query parameters based on contract system api
-      product_id:
+      productId:
         type: number
         required: false
-      contract_name:
+      contractName:
         type: string
         required: false
-      customer_id:
+      customerId:
         type: number
         required: false
     responses:
@@ -78,6 +78,7 @@ protocols: [ HTTP, HTTPS ]
             type: ContractMaster[]
 
       400:
+        description: When request is incorrect or with invalid parameters and server could not understand it.
         body:
           application/json:
             type: Error
@@ -87,7 +88,7 @@ protocols: [ HTTP, HTTPS ]
     body:
       application/json:
         type: ContractMaster
-        example: !include examples/contract_patch_example.json
+        example: !include examples/contract-patch-example.json
     responses:
       201:
         headers:
@@ -95,27 +96,23 @@ protocols: [ HTTP, HTTPS ]
             description: URI pointing to the location of the newly created contact
             example: http://localhost:8081/api/process/contracts/123
       409:
+        description: When you try to post the same record again.
         body:
           application/json:
             type: Error
             example: { "message" : "Conflict detected while inserting the record", "code" : 409 }
       400:
+        description: When request is incorrect or with invalid parameters and server could not understand it.
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
-      412:
-        body:
-          application/json:
-            type: Error
-            example: { "message" : "Precondition failed", "code" : 412 }
-
-
-/{contract_id}:
-  displayName: contract_id
-  description: Fetch the contact information for the given contract_id
+      
+/{contractId}:
+  displayName: contract id
+  description: Fetch the contact information for the given contractId
   uriParameters:
-    contract_id:
+    contractId:
       type: integer
       required: true
   get:
@@ -130,7 +127,7 @@ protocols: [ HTTP, HTTPS ]
         body:
           application/json:
             type: ContractMaster
-            example: !include examples/contract_master_example.json
+            example: !include examples/contract-master-example.json
         headers:
             ETag:
               displayName: ETag
@@ -138,16 +135,19 @@ protocols: [ HTTP, HTTPS ]
               type: string
               example: c7493-d7-a6b64d37f6cc3
       400:
+        description: When request is incorrect or with invalid parameters and server could not understand it.
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
+        description: If there is no record found
         body:
           application/json:
             type: Error
             example: { "message" : "Resource not found", "code" : 404 }
       304:
+          description: If the value you send in If-None-Match matches with resource's ETag, you have the latest record.
           body:
            application/json:
             type: Error
@@ -158,11 +158,13 @@ protocols: [ HTTP, HTTPS ]
       204:
         description: "Contract has been successfully deleted!"
       400:
+        description: When request is incorrect or with invalid parameters and server could not understand it.
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
+        description: If there is no record found
         body:
           application/json:
             type: Error
@@ -191,7 +193,7 @@ protocols: [ HTTP, HTTPS ]
     body:
       application/json:
         type: ContractMaster
-        example: !include examples/contract_patch_example.json
+        example: !include examples/contract-patch-example.json
     responses:
       204:
         description: "The contact has been successfully updated!"
@@ -202,16 +204,19 @@ protocols: [ HTTP, HTTPS ]
               type: string
               example: c7493-d7-a6b64d37f6cc3
       400:
+        description: When request is incorrect or with invalid parameters and server could not understand it.
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
+        description: If there is no record found
         body:
           application/json:
             type: Error
             example: { "message" : "Resource not found", "code" : 404 }
       412:
+          description: If If-Match value doesn't match with resource's etag, you need to get latest version of the record.
           headers:
             ETag:
               displayName: ETag

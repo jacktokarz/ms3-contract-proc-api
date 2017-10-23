@@ -6,24 +6,24 @@ baseUri: http://localhost:8081/api/process/clients
 protocols: [ HTTP, HTTPS ]
 types:
   Client:
-    type: !include datatypes/client_datatypes.raml
+    type: !include datatypes/client-datatypes.raml
   Error:
-    type: !include errormessages/error_messages.raml
+    type: !include errormessages/error-messages.raml
 
 
 
 /:
-  description: Fetch all the clients based on the query parameters like name
+  
   get:
     queryParameters:
-      first_name:
+      firstName:
         type: string
         required: false
-        description: Fetch the client details based on first_name
-      last_name:
+        description: Fetch the client details based on firstName
+      lastName:
         type: string
         required: false
-        description: Fetch the client details based on last_name
+        description: Fetch the client details based on lastName
       position:
         type: string
         required: false
@@ -36,18 +36,18 @@ types:
         type: string
         required: false
         description: Fetch the client details based on city
-      zip_code:
+      zipcode:
         type: string
         required: false
-        description: Fetch the client details based on zip-code
+        description: Fetch the client details based on zipcode
       name:
         type: string
         required: false
         description: Fetch the client details based on name
-      poc_id:
+      pocId:
         type: string
         required: false
-        description: Fetch the client details based on poc_id(person id)
+        description: Fetch the client details based on pocId(person id)
     responses:
       200:
         body:
@@ -55,6 +55,7 @@ types:
             type: Client[]
 
       400:
+        description: If the request is with invalid parameters or incorrect and server could not understand it
         body:
           application/json:
             type: Error
@@ -64,39 +65,47 @@ types:
     body:
       application/json:
         type: Client
-        example: !include examples/client_example.json
+        example: !include examples/client-example.json
     responses:
       201:
         headers:
           Location:
+            displayName: Location
+            type: string
             description: URI pointing to the location of the newly created client
             example: http://localhost:8081/api/process/clients/123/5573
+            required: true
       409:
+        description: When you try to post the same record again
         body:
           application/json:
             type: Error
             example: { "message" : "Conflict detected while inserting the record", "code" : 409 }
       400:
+        description: If the request is with invalid parameters or incorrect and server could not understand it
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
-      412:
+      415:
+        description: If media type of the request body is different
         body:
           application/json:
             type: Error
-            example: { "message" : "Precondition failed", "code" : 412 }
+            example: { "message" : "Unsupported media type", "code" : 415 }
 
 
-/{person_id}/{customer_id}:
-  displayName: person_id and customer_id
-  description: Fetch the client information for the given person_id and customer_id
+/{personId}/{customerId}:
+  displayName: personId and customerId
+  description: Fetch the client information for the given personId and customerId
   uriParameters:
-    person_id:
+    personId:
       type: integer
+      example: 10
       required: true
-    customer_id:
+    customerId:
       type: integer
+      example: 12
       required: true
   get:
     headers:
@@ -110,7 +119,7 @@ types:
         body:
           application/json:
             type: Client
-            example: !include examples/client_example.json
+            example: !include examples/client-example.json
         headers:
             ETag:
               displayName: ETag
@@ -118,11 +127,19 @@ types:
               type: string
               example: c7493-d7-a6b64d37f6cc3
       400:
+        description: If the request is with invalid parameters or incorrect and server could not understand it 
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
+      304:
+          description: If the value you send in If-None-Match matches with resource's ETag, you have the latest record
+          body:
+           application/json:
+            type: Error
+            example: { "message" : "Not Modified", "code" : 304 }      
       404:
+        description: If there is no record found
         body:
           application/json:
             type: Error
@@ -130,19 +147,22 @@ types:
   delete:
     description: To delete a particular Client
     responses:
-      204:
+      200:
         description: "Client has been successfully deleted!"
       400:
+        description: If the request is with invalid parameters or incorrect and server could not understand it
         body:
           application/json:
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
+        description: if there is no record found
         body:
           application/json:
             type: Error
             example: { "message" : "Resource not found", "code" : 404 }
   patch:
+    description: Update a record
     headers:
       If-Match:
           type: string
@@ -152,8 +172,7 @@ types:
     body:
       application/json:
         type: Client
-        example: !include examples/client_example.json
-        required: false
+        example: !include examples/client-example.json
     responses:
       204:
         description: "The Client has been successfully updated!"
@@ -164,16 +183,19 @@ types:
               type: string
               example: c7493-d7-a6b64d37f6cc3
       400:
+        description: If the request is with invalid parameters or incorrect and server could not understand it
         body:
           application/json:          
             type: Error
             example: { "message" : "Bad request", "code" : 400 }
       404:
+        description: If there is no record found
         body:
           application/json:
             type: Error
             example: { "message" : "Resource not found", "code" : 404 }
       412:
+          description: If If-Match value doesn't match with resource's etag, you need to get latest version of the record
           headers:
             ETag:
               displayName: ETag
