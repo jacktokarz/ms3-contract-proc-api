@@ -4,23 +4,23 @@ mediaType: application/json
 baseUri: https://localhost:8081/api/process/offers
 types:
   entitlement:
-   type: !include data-types/entitlement_datatype.yaml
+   type: !include data-types/entitlement-datatype.yaml
   product:
-   type: !include data-types/product_datatype.yaml
+   type: !include data-types/product-datatype.yaml
   offer:
-    type: !include data-types/offer_datatype.raml
+    type: !include data-types/offer-datatype.raml
   contract:
-    type: !include data-types/contract_datatype.yaml
+    type: !include data-types/contract-datatype.yaml
   errorcode:
-     type: !include data-types/errorcode_datatype.yaml
-protocols: [ HTTPS ]
+     type: !include data-types/errorcode-datatype.yaml
+protocols: [ HTTPS, HTTP ]
 /:
   get:
     queryParameters:
-      entitlement_name:
+      entitlementName:
         type: string
         required: false
-      product_name:
+      productName:
         type: string
         required: false
     responses:
@@ -28,7 +28,7 @@ protocols: [ HTTPS ]
         body:
           application/json:
             type: offer[]
-            example: !include examples/offer_collection_get_example.json
+            example: !include examples/offer-collection-get-example.json
       400:
         description: If there is an error in syntax while sending the request body
         body:
@@ -38,7 +38,7 @@ protocols: [ HTTPS ]
     body:
       application/json:
         type: offer
-        example: !include examples/offer_example.json
+        example: !include examples/offer-requestBody-example.json
     responses:
       201:
         headers:
@@ -86,7 +86,7 @@ protocols: [ HTTPS ]
         body:
           application/json:
             type: offer
-            example: !include examples/offer_single_get_example.json
+            example: !include examples/offer-single-get-example.json
       304:
         description: If the value you send in If-None-Match matches with resource's ETag, you have the latest record
         body:
@@ -127,7 +127,7 @@ protocols: [ HTTPS ]
     body:
       application/json:
         type: offer
-        example: !include examples/offer_example.json
+        example: !include examples/offer-requestBody-example.json
     responses:
       204:
         description: Resource has been modified successfully.

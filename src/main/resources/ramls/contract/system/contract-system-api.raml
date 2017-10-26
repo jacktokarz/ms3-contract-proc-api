@@ -2,10 +2,10 @@
 title: Contracts system API
 version: "1.0"
 mediaType: application/json
-baseUri: http://localhost:8081/api/sys/contracts
+baseUri: http://localhost:8081/api/system/contracts
 types:
   Contract: !include types/Contract.raml
-  Error: !include errormessages/error_messages.raml
+  Error: !include errormessages/error-messages.raml
   
 protocols: [HTTP, HTTPS]
 /:
@@ -13,13 +13,13 @@ protocols: [HTTP, HTTPS]
     body:
       application/json:
         type: Contract
-        example: !include examples/contract_post_example.json
+        example: !include examples/contract-post-example.json
     responses:
       201:
         headers:
           Location:
             description: URI pointing to the location of the newly created contract
-            example: http://localhost:8081/api/sys/contracts/123
+            example: http://localhost:8081/api/system/contracts/123
       409:
         body:
           application/json:
@@ -43,11 +43,11 @@ protocols: [HTTP, HTTPS]
         description: Filter the selected contracts by name
         type: string
         required: false
-      customer_id:
+      customerId:
         description: Filter the selected contracts by customer id
         type: number
         required: false
-      product_id:
+      productId:
         description: Filter the selected contracts by product id
         type: number
         required: false
@@ -63,11 +63,11 @@ protocols: [HTTP, HTTPS]
             type: Error
             example: !include examples/400Message.json
 
-/{contract_id}:
-  displayName: contract_id
-  description: Fetch the contract information for the given contract_id
+/{contractId}:
+  displayName: contractId
+  description: Fetch the contract information for the given contractId
   uriParameters:
-    contract_id:
+    contractId:
       type: integer
       example: 123
       required: true
@@ -82,7 +82,7 @@ protocols: [HTTP, HTTPS]
       200:
         body:
           application/json:
-            example: !include examples/contracts_example.json
+            example: !include examples/contracts-example.json
         headers:
           ETag:
             displayName: ETag
