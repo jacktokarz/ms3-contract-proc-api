@@ -64,6 +64,7 @@ payload]]></dw:set-variable>
                 <http:header headerName="Content-Type" value="application/json"/>
             </http:request-builder>
         </http:request>
+
         <http:request config-ref="contract-HTTP-Request-Configuration" path="/{contractId}" method="GET" doc:name="Http - get new contract">
             <http:request-builder>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
@@ -163,7 +164,8 @@ payload]]></dw:set-variable>
 		escalation_contact_id: payload.escalation_contact_id[0],
 		customer_id: payload.customer_id[0],
 		product_id: payload.product_id[0],
-		sow: payload.sow[0]
+		sow: payload.sow[0],
+		etag: payload.etag[0]
 }]]></dw:set-variable>
 
         </dw:transform-message>
@@ -183,7 +185,7 @@ payload]]></dw:set-variable>
 		product_id: payload.product_id,
 		product_name: payload.product_name,
 		product_description: payload.product_description,
-		entitlements: payload.product_entitlements
+		product_entitlements: payload.product_entitlements
 }]]></dw:set-variable>
         </dw:transform-message>
         <http:request config-ref="client-HTTP-Request-Configuration" path="/{personId}/{customerId}" method="GET" doc:name="HTTP - Get a client by id">
