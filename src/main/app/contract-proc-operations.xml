@@ -183,7 +183,7 @@ payload]]></dw:set-variable>
 		product_id: payload.product_id,
 		product_name: payload.product_name,
 		product_description: payload.product_description,
-		entitlements: payload.product_entitlements
+		product_entitlements: payload.product_entitlements
 }]]></dw:set-variable>
         </dw:transform-message>
         <http:request config-ref="client-HTTP-Request-Configuration" path="/{personId}/{customerId}" method="GET" doc:name="HTTP - Get a client by id">
