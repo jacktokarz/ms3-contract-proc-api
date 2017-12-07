@@ -28,24 +28,33 @@
 		"customer_notes":"This is a note"
 	},
 	
-	"product_id": 11535,
-	"product_name": "Ops Support Economy",
+	"product_id": 17,
+  	"product_name": "Mulesoft runtime",
 	"product_description": "The basic service level agreement",
-	"product_entitlements" : {
-		"entitlement_1": {
-		    "entitlement_id": 3,
-			"entitlement_name": "Prod- 24 Hr Response",
-			"entitlement_description": "MS3 will react to any issue in a prod environment within 24 hours, inside normal support hours."
-		},
-		"entitlement_2": {
-	    	"entitlement_id": 4,
-			"entitlement_name": "Unlimited Online or Email Ticket Creation",
-			"entitlement_description": "The ability to make an unlimited amount of tickets for MS3 developers to work on."
-		},
-		"entitlement_3": {
-		    "entitlement_id": 5,
-			"entitlement_name": "Daily Monitoring of the Integrations",
-			"entitlement_description": "The integrations will be checked daily for any issues."
-		}
-	}
+	"product_entitlements":
+	    {
+	      "entitlements": [
+	        {
+	          "entitlement_id": 3,
+	          "entitlement_name": "ent 3",
+	          "entitlement_description": "entdescr3",
+	          "entitlement_type": "Hours",
+	          "entitlement_value": 5
+	        },
+	        {
+	          "entitlement_id": 4,
+	          "entitlement_name": "ent4",
+	          "entitlement_description": "entdescr4",
+	          "entitlement_type": "Response Time",
+	          "entitlement_value": 12
+	        },
+	        {
+	          "entitlement_id": 5,
+	          "entitlement_name": "ent5",
+	          "entitlement_description": "entdescr5 patched",
+	          "entitlement_type": "Hours",
+	          "entitlement_value": 10
+	        }
+	      ]
+	    }
 }
