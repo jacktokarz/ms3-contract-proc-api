@@ -6,14 +6,12 @@ properties:
     id: 
       description: 'the unique id for this contract' 
       minimum: 1 
-      default: 123 
       example: 123
       type: number
       required: false
     contract_name: 
       description: 'The name used to identify this contract'
       minLength: 1
-      default: contract
       example: 'The Date Contract with Company'
       type: string
       required: false
@@ -22,24 +20,21 @@ properties:
       example: 'This contract was made by Employee on Date to cover Details about More Details.'
       type: string
       required: false
-    sow: 
-      description: 'Indicates the level of care we have promised to provide the customer.'
-      default: standard
-      example: platinum
-      type: string
+    type:
+      description: 'The type of contract'
+      example: 'SOW'
       required: false
-      enum: [gold, platinum, standard, economy]
+    status:
+      description: 'The status of the contract'
+      example: 'Open'
+      required: false
     customer_id:
       description: 'The identifier for the customer this contract applies to'
-      minimum: 1
-      default: 123
       example: 123
       type: number
       required: false
     product_id:
       description: 'The identifier for the product this contract provides to the customer.'
-      minimum: 1
-      default: 123
       example: 123
       type: number
       required: false

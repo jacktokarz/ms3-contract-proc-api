@@ -18,28 +18,22 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 ---
 payload]]></dw:set-variable>
         </dw:transform-message>
-        <http:request config-ref="offer-HTTP-Request-Configuration" path="/{productId}" method="DELETE" doc:name="HTTP - offer delete">
-            <http:request-builder>
-                <http:uri-param paramName="productId" value="#[flowVars.params.offer.product_id]"/>
-            </http:request-builder>
-        </http:request>
-
-        <logger message="contract-process delete: past product" level="INFO" doc:name="Logger - offer deleted"/>
-        <http:request config-ref="client-HTTP-Request-Configuration" path="/{personId}/{customerId}" method="DELETE" doc:name="HTTP - client delete">
-            <http:request-builder>
-                <http:query-param paramName="personId" value="#[flowVars.params.client.person_id]"/>
-                <http:uri-param paramName="customerId" value="#[flowVars.params.client.customer_id]"/>
-
-            </http:request-builder>
-        </http:request>
-
-        <logger message="contract process delete: past client" level="INFO" doc:name="Logger - client deleted"/>
         <http:request config-ref="contract-HTTP-Request-Configuration" path="/{contractId}" method="DELETE" doc:name="HTTP - contract sys delete">
             <http:request-builder>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="contract process delete: past contract" level="INFO" doc:name="Logger - contract deleted"/>
+
+        <http:request config-ref="client-HTTP-Request-Configuration" path="/{personId}/{customerId}" method="DELETE" doc:name="HTTP - client delete">
+            <http:request-builder>
+                <http:uri-param paramName="personId" value="#[flowVars.params.client.poc_id]"/>
+                <http:uri-param paramName="customerId" value="#[flowVars.params.client.customer_id]"/>
+
 
             </http:request-builder>
         </http:request>
+
 
         <logger message="contract process delete: All deleted" level="INFO" doc:name="Logger - all deleted"/>
     </flow>
@@ -164,12 +158,14 @@ payload]]></dw:set-variable>
 		escalation_contact_id: payload.escalation_contact_id[0],
 		customer_id: payload.customer_id[0],
 		product_id: payload.product_id[0],
-		sow: payload.sow[0],
+		type: payload.type[0],
+		status: payload.status[0],
 		etag: payload.etag[0]
 }]]></dw:set-variable>
 
         </dw:transform-message>
         <logger message="get contract by id: flowVars.contract: #[flowVars.contract]" level="INFO" doc:name="Logger"/>
+
         <http:request config-ref="offer-HTTP-Request-Configuration" path="/{productId}" method="GET" doc:name="HTTP - Get offer from process">
             <http:request-builder>
                 <http:uri-param paramName="productId" value="#[flowVars.contract.product_id]"/>
@@ -357,6 +353,7 @@ flowVars.processContracts]]></dw:set-payload>
 ---
 payload]]></dw:set-variable>
         </dw:transform-message>
+        <logger message="The body to post is: #[flowVars.params]" level="INFO" doc:name="Logger - check 'params'"/>
 
         <choice doc:name="Choice - Check for incoming productId, to see if offer already exists">
             <when expression="#[flowVars.params.product_id == null]">
@@ -463,7 +460,8 @@ flowVars.params.customer_id= chunks[chunks.size() -1];]]></expression-component>
 	customer_id: flowVars.params.customer_id,
 	contract_name: flowVars.params.contract_name,
 	contract_description: flowVars.params.contract_description,
-	sow: flowVars.params.sow,
+	type: flowVars.params.type,
+	status: flowVars.params.status,
 	entitlement_update_list: flowVars.params.entitlement_update_list,
 	start_date: flowVars.params.start_date,
 	end_date: flowVars.params.end_date
