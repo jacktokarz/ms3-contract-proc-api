@@ -176,8 +176,8 @@ payload]]></dw:set-variable>
         <logger message="get contract by id: flowVars.contract: #[flowVars.contract]" level="INFO" doc:name="Logger"/>
         <http:request config-ref="offer-HTTP-Request-Configuration" path="/{productId}" method="GET" doc:name="HTTP - Get offer from process">
             <http:request-builder>
-                <http:query-param paramName="corrId" value="#[flowVars.corrId]"/>
                 <http:uri-param paramName="productId" value="#[flowVars.contract.product_id]"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                 <http:header headerName="If-None-Match" value="#[flowVars.noMatch]"/>
             </http:request-builder>
         </http:request>
