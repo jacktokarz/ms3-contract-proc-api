@@ -7,6 +7,8 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 
     <flow name="contract-proc-api-main">
         <http:listener config-ref="HttpListenerConfig" path="/api/process/contracts/*" doc:name="HTTP"/>
+        <set-variable variableName="corrId" value="#[message.inboundProperties.corrId==null?message.id:message.inboundProperties.corrId]" doc:name="Variable-corrId"/>
+        <logger message="CorrelationId=#[flowVars.corrId]" level="INFO" doc:name="Logger-Mule-ELK"/>
         <apikit:router config-ref="contract-proc-api-config" doc:name="APIkit Router"/>
         <exception-strategy ref="contract-proc-api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
     </flow>
