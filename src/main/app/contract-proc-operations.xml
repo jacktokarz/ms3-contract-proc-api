@@ -21,18 +21,19 @@ payload]]></dw:set-variable>
         <http:request config-ref="contract-HTTP-Request-Configuration" path="/{contractId}" method="DELETE" doc:name="HTTP - contract sys delete">
             <http:request-builder>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
-        <logger message="contract process delete: past contract" level="INFO" doc:name="Logger - contract deleted"/>
 
+        <logger message="contract process delete: past contract" level="INFO" doc:name="Logger - contract deleted"/>
         <http:request config-ref="client-HTTP-Request-Configuration" path="/{personId}/{customerId}" method="DELETE" doc:name="HTTP - client delete">
             <http:request-builder>
                 <http:uri-param paramName="personId" value="#[flowVars.params.client.poc_id]"/>
                 <http:uri-param paramName="customerId" value="#[flowVars.params.client.customer_id]"/>
-
-
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
+
 
 
         <logger message="contract process delete: All deleted" level="INFO" doc:name="Logger - all deleted"/>
@@ -56,16 +57,18 @@ payload]]></dw:set-variable>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
                 <http:header headerName="If-Match" value="#[flowVars.inbound.'If-Match']"/>
                 <http:header headerName="Content-Type" value="application/json"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
-
         <http:request config-ref="contract-HTTP-Request-Configuration" path="/{contractId}" method="GET" doc:name="Http - get new contract">
             <http:request-builder>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
                 <http:header headerName="Content-Type" value="application/json"/>
                 <http:header headerName="If-None-Match" value="#[flowVars.inbound.'If-None-Match']"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
+
 
         <dw:transform-message doc:name="Transform Message - save ids from new contract">
             <dw:set-variable variableName="ids"><![CDATA[%dw 1.0
@@ -96,8 +99,10 @@ payload]]></dw:set-variable>
                         <http:uri-param paramName="productId" value="#[flowVars.ids.productId[0]]"/>
                         <http:header headerName="If-Match" value="#[flowVars.inbound.'product-If-Match']"/>
                         <http:header headerName="Content-Type" value="application/json"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
                 <logger message="contract process: Offer update is completed." level="INFO" doc:name="Logger - &quot;offer update is complete&quot;"/>
             </when>
@@ -121,8 +126,10 @@ payload]]></dw:set-variable>
                         <http:uri-param paramName="customerId" value="#[flowVars.ids.customerId[0]]"/>
                         <http:uri-param paramName="personId" value="#[flowVars.ids.personId[0]]"/>
                         <http:header headerName="If-Match" value="#[flowVars.inbound.'person-If-Match']"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
             </when>
             <otherwise>
@@ -140,8 +147,10 @@ payload]]></dw:set-variable>
             <http:request-builder>
                 <http:uri-param paramName="contractId" value="#[flowVars.contractId]"/>
                 <http:header headerName="If-None-Match" value="#[message.inboundProperties.'If-None-Match']"/>
+                <http:header headerName="flowVars.corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
+
 
         <dw:transform-message doc:name="Transform Message - Save contract" metadata:id="54b10413-5fb2-4c6c-bcc6-dba29bcc3d76">
             <dw:input-payload mimeType="application/json"/>
@@ -165,13 +174,14 @@ payload]]></dw:set-variable>
 
         </dw:transform-message>
         <logger message="get contract by id: flowVars.contract: #[flowVars.contract]" level="INFO" doc:name="Logger"/>
-
         <http:request config-ref="offer-HTTP-Request-Configuration" path="/{productId}" method="GET" doc:name="HTTP - Get offer from process">
             <http:request-builder>
                 <http:uri-param paramName="productId" value="#[flowVars.contract.product_id]"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                 <http:header headerName="If-None-Match" value="#[flowVars.noMatch]"/>
             </http:request-builder>
         </http:request>
+
 
         <dw:transform-message doc:name="Transform Message - Save offer">
             <dw:set-variable variableName="getOffer"><![CDATA[%dw 1.0
@@ -189,8 +199,10 @@ payload]]></dw:set-variable>
                 <http:uri-param paramName="customerId" value="#[flowVars.contract.customer_id]"/>
                 <http:uri-param paramName="personId" value="#[flowVars.contract.escalation_contact_id]"/>
                 <http:header headerName="If-None-Match" value="#[flowVars.noMatch]"/>
+                <http:header headerName="corrId" value="#[flowVars.corrId]"/>
             </http:request-builder>
         </http:request>
+
 
         <dw:transform-message doc:name="Transform Message - set contract offer and client into payload" metadata:id="e9c979f4-a759-40e4-9666-91d0fedd5bc6">
             <dw:input-payload mimeType="application/json"/>
@@ -295,7 +307,11 @@ System.out.println("Client params are: "+flowVars.clientParams);]]></expression-
             <when expression="#[flowVars.clientParams.length() &gt; 2]">
                 <set-variable doc:name="Variable - New Empty Contract List" value="#[new java.util.ArrayList()]" variableName="clientFilteredList"/>
                 <http:request config-ref="client-HTTP-Request-Configuration" path="/#[flowVars.clientParams]" method="GET" doc:name="HTTP - get clients with filters">
+                    <http:request-builder>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
+                    </http:request-builder>
                 </http:request>
+
 
 
                 <dw:transform-message doc:name="Transform Message - Payload into java">
@@ -373,8 +389,10 @@ payload]]></dw:set-variable>
                 <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="POST" doc:name="make offer">
                     <http:request-builder>
                         <http:header headerName="content-type" value="application/json"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
                 <expression-component doc:name="Expression - Get productId from passed location"><![CDATA[import java.util.*;
 
 String location = message.inboundProperties.Location;
@@ -428,8 +446,10 @@ flowVars.params.product_id= chunks[chunks.size() -1];]]></expression-component>
                 <http:request config-ref="client-HTTP-Request-Configuration" path="/" method="POST" doc:name="HTTP - make client">
                     <http:request-builder>
                         <http:header headerName="Content-Type" value="application/json"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
                 <expression-component doc:name="Expression - Get person id and customer id from passed location"><![CDATA[import java.util.*;
 
@@ -471,8 +491,10 @@ flowVars.params.customer_id= chunks[chunks.size() -1];]]></expression-component>
                 <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="POST" doc:name="HTTP - Make Contract">
                     <http:request-builder>
                         <http:header headerName="Content_Type" value="application/json"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
                 <expression-component doc:name="Expression - Get new_contract_id from passed location"><![CDATA[import java.util.*;
 
@@ -491,8 +513,10 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                         <http:uri-param paramName="contractId" value="#[sessionVars.params.contract_id]"/>
                         <http:header headerName="if-none-match" value="#[message.inboundProperties.'if-none-match']"/>
                         <http:header headerName="content-type" value="application/json"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
                 <logger message="contract process post: Received contractid, no need to make new contract." level="INFO" doc:name="Logger - not making contract"/>
             </otherwise>
@@ -504,8 +528,10 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                 <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - get contracts filtered by productId">
                     <http:request-builder>
                         <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
 
             </when>
@@ -514,24 +540,30 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                 <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - customerId">
                     <http:request-builder>
                         <http:query-param paramName="customerId" value="#[message.inboundProperties.'http.query.params'.customerId]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
             </when>
             <when expression="#[message.inboundProperties.'http.query.params'.customerId==null &amp;&amp; message.inboundProperties.'http.query.params'.productId == null &amp;&amp; message.inboundProperties.'http.query.params'.contractName != null]">
                 <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - contractName">
                     <http:request-builder>
                         <http:query-param paramName="contractName" value="#[message.inboundProperties.'http.query.params'.contractName]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
             </when>
             <when expression="#[message.inboundProperties.'http.query.params'.customerId!=null &amp;&amp; message.inboundProperties.'http.query.params'.productId == null &amp;&amp; message.inboundProperties.'http.query.params'.contractName != null]">
                 <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - contract name and customer id">
                     <http:request-builder>
                         <http:query-param paramName="contractName" value="#[message.inboundProperties.'http.query.params'.contractName]"/>
                         <http:query-param paramName="customerId" value="#[message.inboundProperties.'http.query.params'.customerId]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
             </when>
             <when expression="#[message.inboundProperties.'http.query.params'.customerId!=null &amp;&amp; message.inboundProperties.'http.query.params'.productId != null &amp;&amp; message.inboundProperties.'http.query.params'.contractName == null]">
@@ -539,8 +571,10 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                     <http:request-builder>
                         <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
                         <http:query-param paramName="customerId" value="#[message.inboundProperties.'http.query.params'.customerId]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
             </when>
             <when expression="#[message.inboundProperties.'http.query.params'.customerId==null &amp;&amp; message.inboundProperties.'http.query.params'.productId != null &amp;&amp; message.inboundProperties.'http.query.params'.contractName != null]">
@@ -548,8 +582,10 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                     <http:request-builder>
                         <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
                         <http:query-param paramName="contractName" value="#[message.inboundProperties.'http.query.params'.contractName]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
 
             </when>
             <when expression="#[message.inboundProperties.'http.query.params'.customerId!=null &amp;&amp; message.inboundProperties.'http.query.params'.productId != null &amp;&amp; message.inboundProperties.'http.query.params'.contractName != null]">
@@ -558,12 +594,18 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                         <http:query-param paramName="productId" value="#[message.inboundProperties.'http.query.params'.productId]"/>
                         <http:query-param paramName="contractName" value="#[message.inboundProperties.'http.query.params'.contractName]"/>
                         <http:query-param paramName="customerId" value="#[message.inboundProperties.'http.query.params'.customerId]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
 
+
             </when>
             <otherwise>
-                <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - none"/>
+                <http:request config-ref="contract-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - none">
+                    <http:request-builder>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
+                    </http:request-builder>
+                </http:request>
 
             </otherwise>
         </choice>
@@ -574,26 +616,36 @@ flowVars.params.new_contract_id= chunks[chunks.size() -1];]]></expression-compon
                 <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - GET offers with... productName">
                     <http:request-builder>
                         <http:query-param paramName="productName" value="#[flowVars.originalParams.productName]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
             </when>
             <when expression="#[flowVars.originalParams.productName == null &amp;&amp; flowVars.originalParams.entitlementName != null]">
                 <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - GET offers with... entitlementName">
                     <http:request-builder>
                         <http:query-param paramName="entitlementName" value="#[flowVars.originalParams.entitlementName]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
             </when>
             <when expression="#[flowVars.originalParams.productName != null &amp;&amp; flowVars.originalParams.entitlementName != null]">
                 <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - both">
                     <http:request-builder>
                         <http:query-param paramName="productName" value="#[flowVars.originalParams.productName]"/>
                         <http:query-param paramName="entitlementName" value="#[flowVars.originalParams.entitlementName]"/>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
                     </http:request-builder>
                 </http:request>
+
             </when>
             <otherwise>
-                <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - none"/>
+                <http:request config-ref="offer-HTTP-Request-Configuration" path="/" method="GET" doc:name="HTTP - none">
+                    <http:request-builder>
+                        <http:header headerName="corrId" value="#[flowVars.corrId]"/>
+                    </http:request-builder>
+                </http:request>
             </otherwise>
         </choice>
     </sub-flow>
